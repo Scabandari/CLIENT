@@ -30,8 +30,6 @@ def get_user_command(udp_queue, udp_queue_lock, tcp_queue, tcp_queue_lock):
                    "'b' ==> Bidding, putting items up for bid etc.\n" +
                    ":: ")
     if choice is CHOICES[0]:
-        # todo make function to give user their registration options and send UDP msg
-        # todo same for TCP
         name = input("Enter your unique name identifier: ")
         ip_address = input("Enter the ip address of the computer you'll be bidding from: ")
         port = input("Enter the port number your computer will be listening on: ")
@@ -66,7 +64,6 @@ def get_user_command(udp_queue, udp_queue_lock, tcp_queue, tcp_queue_lock):
             with tcp_queue_lock:
                 #tcp_queue.append(send_bytes)
                 tcp_queue.append(test_msg.encode('ascii'))
-
     else:
         print("That option isn't available")
         return None
