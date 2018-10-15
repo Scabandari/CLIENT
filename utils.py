@@ -47,23 +47,23 @@ def get_user_command(udp_queue, udp_queue_lock, tcp_queue, tcp_queue_lock):
         selection = input("Enter a command: \n" +
                           "'of' ==> Offer an item for auction\n::")
         if selection == 'of':
-            # name = input("Enter your unique name identifier: ")
-            # ip_address = input("Enter the ip address of your computer: ")
-            # description = input("Enter a description of the item on offer: ")
-            # min_bid = input("Enter the minimum bid: ")
-            # request_number = randint(0, 100000)
-            #
-            # send_msg = {'type': 'OFFER',
-            #             'request': request_number,
-            #             'name': name,
-            #             'ip': ip_address,
-            #             'description': description,
-            #             'minimum bid': min_bid}
-            #send_bytes = dict_to_bytes(send_msg)
+            name = input("Enter your unique name identifier: ")
+            ip_address = input("Enter the ip address of your computer: ")
+            description = input("Enter a description of the item on offer: ")
+            min_bid = input("Enter the minimum bid: ")
+            request_number = randint(0, 100000)
+
+            send_msg = {'type': 'OFFER',
+                        'request': request_number,
+                        'name': name,
+                        'ip': ip_address,
+                        'description': description,
+                        'minimum bid': min_bid}
+            send_bytes = dict_to_bytes(send_msg)
             test_msg = "Successfully sent over tcp"
             with tcp_queue_lock:
-                #tcp_queue.append(send_bytes)
-                tcp_queue.append(test_msg.encode('ascii'))
+                tcp_queue.append(send_bytes)
+                #tcp_queue.append(test_msg.encode('utf-8'))
     else:
         print("That option isn't available")
         return None
