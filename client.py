@@ -12,29 +12,37 @@ udp_messages = []
 udp_msg_lock = threading.Lock()
 tcp_messages = []
 tcp_msg_lock = threading.Lock()
+
+tcp_messages_returned = []
+tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 CHOICES = ['r']
 HOST = "192.168.0.107"  # this would normally be different and particular to the host machine ie client
 PORT = 5075  # UDP port
 # todo check w/ prof that the server ip address will be known and don't need to get it programmatically
-SERVER = ("192.168.0.107", 5023)
+SERVER = ("192.168.0.107", 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # todo need this? test pls
 udp_socket.bind((HOST, PORT))
 
 tcp_ip = HOST  # won't usually, get tcp servers machines local ip address on LAN
-tcp_port = 5001
+tcp_port = 5002
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 tcp_socket.connect((tcp_ip, tcp_port))
 
 
 def tcp_function():
     while True:
+        # if tcp_messages_returned:
+        #     with tcp_ret_lock:
+        #         tcp_messages_returned.pop(0)
+        #     print("Received back t")
         if tcp_messages:
             with tcp_msg_lock:
                 msg = tcp_messages.pop(0)
             tcp_socket.send(msg)
-            return_msg = tcp_socket.recv(1024).decode('ascii')
+            #return_msg = tcp_socket.recv(1024).decode('ascii')
+            return_msg = tcp_socket.recv(1024).decode('utf-8')
             print("Received back tcp response: " + return_msg)
 
 
@@ -61,7 +69,9 @@ while True:
         udp_messages,
         udp_msg_lock,
         tcp_messages,
-        tcp_msg_lock
+        tcp_msg_lock,
+        tcp_messages_returned,
+        tcp_ret_lock
     )
 
 
