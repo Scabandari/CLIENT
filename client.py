@@ -13,7 +13,7 @@ udp_msg_lock = threading.Lock()
 tcp_messages = []
 tcp_msg_lock = threading.Lock()
 
-tcp_messages_returned = []
+tcp_messages_returned = []  # todo we need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 CHOICES = ['r']
