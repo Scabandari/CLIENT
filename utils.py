@@ -14,16 +14,18 @@ def get_user_command(
         udp_queue_lock,
         tcp_queue,
         tcp_queue_lock,
-        tcp_msg_return,
-        tcp_ret_lock):
+        #tcp_msg_return,
+        tcp_ret_lock,
+        terminal_lock,
+        MY_TCP_PORT):  # should be set on start up, include when sending TCP msg's
     """This function gives the user their options of different actions they can take
         and either returns None if their choice doesn't exist or the msg to be send
          over UDP to the server"""
     # todo check if we've received a tcp msg in return, not sure yet if we even need this
-    with tcp_ret_lock:
-        if tcp_msg_return:
-            return_msg = tcp_msg_return.pop(0)
-            print("Return msg: {}".format(return_msg))
+    # with tcp_ret_lock:
+    #     if tcp_msg_return:
+    #         return_msg = tcp_msg_return.pop(0)
+    #         print("Return msg: {}".format(return_msg))
 
     # todo the server should keep track of the request numbers so if the cient iniates the conact how does it know
     # which request numbers are already taken or not???
@@ -55,7 +57,7 @@ def get_user_command(
                             'type': REGISTER,
                             'name': name,
                             'ip': ip_address,
-                            'port': port}
+                            'port': MY_TCP_PORT}
 
             elif register_unregister == 'd':
                 name = input("Enter the client name to de-register: ")
