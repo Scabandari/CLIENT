@@ -13,43 +13,65 @@ udp_msg_lock = threading.Lock()
 tcp_messages = []
 tcp_msg_lock = threading.Lock()
 
-tcp_messages_returned = []
+tcp_messages_returned = []  # todo we need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 CHOICES = ['r']
 HOST = "192.168.0.107"  # this would normally be different and particular to the host machine ie client
-PORT = 5075  # UDP port
+UDP_PORT = 5075  # UDP port
 # todo check w/ prof that the server ip address will be known and don't need to get it programmatically
 SERVER = ("192.168.0.107", 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # todo need this? test pls
-udp_socket.bind((HOST, PORT))
+udp_socket.bind((HOST, UDP_PORT))
 
 tcp_ip = HOST  # won't usually, get tcp servers machines local ip address on LAN
-tcp_port = 5002
+tcp_server_port = 5002
+MY_TCP_PORT = None  # For listening, the server needs to know which port we're listening on
+# when sending msg's to all clients over TCP
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-tcp_socket.connect((tcp_ip, tcp_port))
+
+# TCP_CLIENT_PORT = 5071  # the port the client is listening for responses on
+# If we wanted to set the port the client would listen for responses on we'd bind it like so
+# tcp_socket.bind((HOST, TCP_CLIENT_PORT))
+tcp_socket.connect((tcp_ip, tcp_server_port))
 
 
-def tcp_function():
+def tcp_incoming():
+    global MY_TCP_PORT
+    while True:
+        return_msg = tcp_socket.recv(1024).decode('utf-8')
+        msg = ast.literal_eval(return_msg)
+        with terminal_lock:
+            print("Received tcp msg: " + return_msg)
+        try:
+            if msg['set port']:
+                MY_TCP_PORT = msg['port']
+        except KeyError:
+            pass
+        #print("type(msg): {}".format(type(msg)))
+
+
+def tcp_outgoing():
     while True:
         # if tcp_messages_returned:
         #     with tcp_ret_lock:
         #         tcp_messages_returned.pop(0)
         #     print("Received back t")
-        if tcp_messages:
+        if tcp_messages:  # msg's to send
             with tcp_msg_lock:
                 msg = tcp_messages.pop(0)
             tcp_socket.send(msg)
             #return_msg = tcp_socket.recv(1024).decode('ascii')
             return_msg = tcp_socket.recv(1024).decode('utf-8')
-            print("Received back tcp response: " + return_msg)
+            with terminal_lock:
+                print("Received back tcp response: " + return_msg)
 
 
 # todo rename this
-def udp_function():
+def udp_outgoing():
     while True:
-        if udp_messages:
+        if udp_messages:  # msg's to send
             with udp_msg_lock:
                 msg = udp_messages.pop(0)
             udp_socket.sendto(msg, SERVER)
@@ -58,11 +80,14 @@ def udp_function():
             print("Receive back udp response: " + response)
 
 
-udp_thread = threading.Thread(target=udp_function)
-udp_thread.start()
+udp_outgoing_thread = threading.Thread(target=udp_outgoing)
+udp_outgoing_thread.start()
 
-tcp_thread = threading.Thread(target=tcp_function)
-tcp_thread.start()
+tcp_incoming_thread = threading.Thread(target=tcp_incoming)
+tcp_incoming_thread.start()
+
+tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
+tcp_outgoing_thread.start()
 
 while True:
     get_user_command(
@@ -70,8 +95,10 @@ while True:
         udp_msg_lock,
         tcp_messages,
         tcp_msg_lock,
-        tcp_messages_returned,
-        tcp_ret_lock
+        #tcp_messages_returned,
+        tcp_ret_lock,
+        terminal_lock,
+        MY_TCP_PORT
     )
 
 
