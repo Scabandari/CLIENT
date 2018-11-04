@@ -1,6 +1,6 @@
 import socket
 import ast
-from utils import get_user_command
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer
 import threading
 
 """Here I'm thinking we need 2 threads in addition to the main thread. One that constantly checks 
@@ -13,7 +13,7 @@ udp_msg_lock = threading.Lock()
 tcp_messages = []
 tcp_msg_lock = threading.Lock()
 
-tcp_messages_returned = []  # todo we need this?
+tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 CHOICES = ['r']
@@ -40,29 +40,23 @@ tcp_socket.connect((tcp_ip, tcp_server_port))
 def tcp_incoming():
     global MY_TCP_PORT
     while True:
-        return_msg = tcp_socket.recv(1024).decode('utf-8')
-        msg = ast.literal_eval(return_msg)
+        msg_received = tcp_socket.recv(1024).decode('utf-8')
+        msg = ast.literal_eval(msg_received)
         with terminal_lock:
-            print("Received tcp msg: " + return_msg)
+            print("Received tcp msg: " + msg)
         try:
             if msg['set port']:
                 MY_TCP_PORT = msg['port']
         except KeyError:
             pass
-        #print("type(msg): {}".format(type(msg)))
 
 
 def tcp_outgoing():
     while True:
-        # if tcp_messages_returned:
-        #     with tcp_ret_lock:
-        #         tcp_messages_returned.pop(0)
-        #     print("Received back t")
         if tcp_messages:  # msg's to send
             with tcp_msg_lock:
                 msg = tcp_messages.pop(0)
             tcp_socket.send(msg)
-            #return_msg = tcp_socket.recv(1024).decode('ascii')
             return_msg = tcp_socket.recv(1024).decode('utf-8')
             with terminal_lock:
                 print("Received back tcp response: " + return_msg)
@@ -89,17 +83,60 @@ tcp_incoming_thread.start()
 tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
 tcp_outgoing_thread.start()
 
+
+def get_user_command():  # should be set on start up, include when sending TCP msg's
+    """This function gives the user their options of different actions they can take
+        and either returns None if their choice doesn't exist or the msg to be send
+         over UDP to the server"""
+
+    # todo the server should keep track of the request numbers so if the client initiates the contact how does it know
+    # todo which request numbers are already taken or not???
+
+    """
+        Get a command from the user, determine if TCP or UDP msg will be sent and form msg
+        then put in respective queue for dispatch by either TCP or UDP thread in client.py
+    """
+    choice = input("Enter a command: \n" +
+                   "'r' ==> Registration and offers\n" +
+                   "'b' ==> Bidding etc.\n" +
+                   "'c' ==> Cancel, will free up terminal to display any responses from server\n::")
+    if choice is 'r':
+        selection = input("Enter a command: \n" +
+                          "'r' ==> Registrations \n" +
+                          "'of' ==> Offers:: \n")
+        if selection == 'r':
+            register_unregister = input("Enter a command: \n" +
+                                        "'r' ==> Register to be able to offer or bid\n" +
+                                        "'d' ==> De-register if you are already registered\n::")
+            if register_unregister == 'r':
+                send_msg = get_registration(MY_TCP_PORT)
+
+            elif register_unregister == 'd':
+                send_msg = get_unregistration()
+            else:
+                print("That option isn't available")
+                return None
+        if selection == 'of':
+            send_msg = get_offer()
+        send_bytes = dict_to_bytes(send_msg)
+
+        with udp_msg_lock:
+            udp_messages.append(send_bytes)
+
+    elif choice is 'b':
+        """Before bidding for a given item, a registered client has to establish a TCP connection to
+            the TCP socket associated with the item of interest at the server side. After this
+            connection, a client can bid on the item by sending a BID message."""
+        pass
+    elif choice is 'c':
+        return
+    else:
+        print("That option isn't available")
+        return None
+
+
 while True:
-    get_user_command(
-        udp_messages,
-        udp_msg_lock,
-        tcp_messages,
-        tcp_msg_lock,
-        #tcp_messages_returned,
-        tcp_ret_lock,
-        terminal_lock,
-        MY_TCP_PORT
-    )
+    get_user_command()
 
 
 
