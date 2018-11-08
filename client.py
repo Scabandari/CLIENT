@@ -9,6 +9,7 @@ import threading
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
+users = []
 udp_messages = []
 udp_msg_lock = threading.Lock()
 tcp_messages = []
@@ -17,9 +18,10 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "192.168.0.107"  # this would normally be different and particular to the host machine ie client
+ipadd = input("Please Enter Host IP: ")
+HOST = ipadd  # this would normally be different and particular to the host machine ie client
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("192.168.0.107", 5024)
+SERVER = (HOST, 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
@@ -93,7 +95,6 @@ udp_outgoing_thread.start()
 # tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
 # tcp_outgoing_thread.start()
 
-
 def get_user_command():  # should be set on start up, include when sending TCP msg's
     """This function gives the user their options of different actions they can take
         and either returns None if their choice doesn't exist or the msg to be send
@@ -119,7 +120,11 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                                         "'r' ==> Register to be able to offer or bid\n" +
                                         "'d' ==> De-register if you are already registered\n::")
             if register_unregister == 'r':
-                send_msg = get_registration(MY_TCP_PORT)
+                username = input("Enter Users Name: ")
+                userip = input("Enter Users IP: ")
+                userport = input("Enter Your Port: ")
+                users.append({'name': username, 'ip': userip, 'port': userport})
+                send_msg = get_registration(MY_TCP_PORT, users)
             elif register_unregister == 'd':
                 send_msg = get_unregistration()
             else:
