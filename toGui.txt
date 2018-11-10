@@ -1,1 +1,0 @@
-(1, [{'open status': 1, 'seller': 'ryan', 'description': 'bat', 'starting time': 1541881303, 'port #': 5050, 'minimum bid': 10, 'highest bid': [10, 'No bids yet']}])
