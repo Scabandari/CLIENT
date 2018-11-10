@@ -3,6 +3,7 @@ import json
 REGISTER = 'REGISTER'
 REGISTERED = 'REGISTERED'
 REQUEST_NUMBER = 1
+GUI_MSG_NUMBER = 1
 
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
@@ -72,3 +73,20 @@ def dict_to_bytes(dict_):
     json_str = json.dumps(dict_)
     bytes_ = json_str.encode('utf-8')  # todo: was ascii
     return bytes_
+
+
+def update_txt(items):
+    """
+    This function updates the text file that passes msg's to the gui. Mainly the state of items for bid
+    :param items:
+    :return:
+    """
+    global GUI_MSG_NUMBER
+    gui_tup = (GUI_MSG_NUMBER, items)
+    GUI_MSG_NUMBER += 1
+    with open('toGui.txt', 'a') as f:
+        f.write(str(gui_tup))
+
+
+
+
