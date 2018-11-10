@@ -1,6 +1,6 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt
 import threading
 
 """Here I'm thinking we need 2 threads in addition to the main thread. One that constantly checks 
@@ -8,6 +8,8 @@ import threading
     for TCP. We now have a 3rd thread checking for incoming UDP messages. When user decides from main 
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
+
+UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 
 udp_messages = []
 udp_msg_lock = threading.Lock()
@@ -67,6 +69,10 @@ def udp_incoming():
     while True:
         message, addr = udp_socket.recvfrom(1024)
         message = message.decode('utf-8')
+        msg_dict = ast.literal_eval(message)
+        if msg_dict['type'] == UPDATE_CLIENTS:
+            update_txt(msg_dict['items'])
+            continue
         print("Received udp message: " + message)
 
 
@@ -128,10 +134,12 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         elif selection == 'of':
             send_msg = get_offer()
 
-        send_bytes = dict_to_bytes(send_msg)
-
-        with udp_msg_lock:
-            udp_messages.append(send_bytes)
+        try:
+            send_bytes = dict_to_bytes(send_msg)
+            with udp_msg_lock:
+                udp_messages.append(send_bytes)
+        except UnboundLocalError:
+            pass
 
     elif choice is 'b':
         """Before bidding for a given item, a registered client has to establish a TCP connection to
