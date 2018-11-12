@@ -1,6 +1,6 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages
 import threading
 
 """Here I'm thinking we need 2 threads in addition to the main thread. One that constantly checks 
@@ -19,9 +19,9 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "192.168.0.107"  # this would normally be different and particular to the host machine ie client
+HOST = "172.31.119.150"  # this would normally be different and particular to the host machine ie client
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("192.168.0.107", 5024)
+SERVER = ("172.31.119.150", 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
@@ -145,6 +145,14 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         """Before bidding for a given item, a registered client has to establish a TCP connection to
             the TCP socket associated with the item of interest at the server side. After this
             connection, a client can bid on the item by sending a BID message."""
+        print("These are the items available")
+        send_msg = getShowAllMessages()
+        try: 
+            send_bytes = dict_to_bytes(send_msg)
+            with udp_msg_lock:
+                udp_messages.append(send_bytes)
+        except UnboundLocalError:
+            pass
         pass
     elif choice is 'c':
         return

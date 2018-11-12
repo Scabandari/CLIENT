@@ -87,6 +87,9 @@ def update_txt(items):
     with open('toGui.txt', 'a') as f:
         f.write(str(gui_tup))
 
-
-
+def getShowAllMessages():
+    send_msg = {
+        'type': 'SHOW_ITEMS'
+    }
+    return send_msg
 
