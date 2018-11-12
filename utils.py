@@ -87,6 +87,22 @@ def update_txt(items):
     with open('toGui.txt', 'a') as f:
         f.write(str(gui_tup))
 
+def get_port():
+    bid_item = input("Enter the Item Number that you wish to bid on: ")
+    send_msg = {
+        'type': 'GETPORT',
+        'item': bid_item
+    }
+    return send_msg
 
 
+
+def get_bid():   
+    bid = input("Enter the bid amount: ")
+    send_msg = {
+        'type': 'BID',
+        'request': req_number(),
+        'amount': bid
+    }
+    return send_msg
 
