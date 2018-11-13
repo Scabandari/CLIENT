@@ -1,6 +1,6 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages, get_port
 import threading
 
 """Here I'm thinking we need 2 threads in addition to the main thread. One that constantly checks 
@@ -9,7 +9,7 @@ import threading
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
-UPDATE_CLIENTS = 'UPDATE-CLIENTS'
+UPDATE_CLIENTS = 'UPDATE-CLIENTS' 
 
 udp_messages = []
 udp_msg_lock = threading.Lock()
@@ -147,13 +147,14 @@ def get_user_command():  # should be set on start up, include when sending TCP m
             connection, a client can bid on the item by sending a BID message."""
         print("These are the items available")
         send_msg = getShowAllMessages()
-        try: 
+        # need to differentiate these two messages
+        #send_msg = get_port()
+        try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        pass
     elif choice is 'c':
         return
     else:
