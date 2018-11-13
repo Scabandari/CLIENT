@@ -1,7 +1,8 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, get_port
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, get_port, get_bid
 import threading
+from time import sleep
 
 """Here I'm thinking we need 2 threads in addition to the main thread. One that constantly checks 
     a list to see if there are user msg's to be sent over UDP and then another thread doing same 
@@ -9,7 +10,10 @@ import threading
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
-UPDATE_CLIENTS = 'UPDATE-CLIENTS' 
+UPDATE_CLIENTS = 'UPDATE-CLIENTS'
+ITEMPORT = 'ITEMPORT' 
+current_port = 0
+current_item = 0
 
 udp_messages = []
 udp_msg_lock = threading.Lock()
@@ -73,6 +77,9 @@ def udp_incoming():
         if msg_dict['type'] == UPDATE_CLIENTS:
             update_txt(msg_dict['items'])
             continue
+        elif msg_dict['type'] == ITEMPORT:
+            global current_port
+            current_port = msg_dict['port']
         print("Received udp message: " + message)
 
 
@@ -152,6 +159,13 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
+        sleep(0.2) #need to fix this
+        global current_port
+        get_bid(current_port)
+
+
+
+
     elif choice is 'c':
         return
     else:

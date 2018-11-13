@@ -4,6 +4,7 @@ REGISTER = 'REGISTER'
 REGISTERED = 'REGISTERED'
 REQUEST_NUMBER = 1
 GUI_MSG_NUMBER = 1
+current_item = 0
 
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
@@ -89,19 +90,24 @@ def update_txt(items):
 
 def get_port():
     bid_item = input("Enter the Item Number that you wish to bid on: ")
+    global current_item
+    current_item = bid_item
     send_msg = {
         'type': 'GETPORT',
         'item': bid_item
     }
     return send_msg
 
-
-
-def get_bid():   
+def get_bid(bidport):
+    port = bidport #connect to this port for bid over TCP
+    print(port)
+    global current_item
+    #connect to TCP port and make bid
     bid = input("Enter the bid amount: ")
     send_msg = {
         'type': 'BID',
         'request': req_number(),
+        'item': current_item,
         'amount': bid
     }
     return send_msg
