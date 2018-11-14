@@ -1,5 +1,7 @@
 from random import randint
 import json
+import socket
+
 REGISTER = 'REGISTER'
 REGISTERED = 'REGISTERED'
 REQUEST_NUMBER = 1
@@ -92,21 +94,31 @@ def getShowAllMessages():
     send_msg = {'type': 'SHOW_ITEMS'}
     return send_msg
 
+#I don't see the item 
 def get_port():
     bid_item = input("Enter the Item Number that you wish to bid on: ")
     global current_item
-    current_item = bid_item
+    current_item = bid_item 
     send_msg = {
         'type': 'GETPORT',
-        'item': bid_item
+        'item': bid_item 
     }
     return send_msg
- 
-def get_bid(bidport):
+
+def establishTcpConnection(HOST, portNumber):
+    print("Connecting to TCP connection for the item")
+    tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    tcp_socket.connect((HOST, 5050))
+    data = tcp_socket.recv(1024)
+    print(data)
+
+def get_bid(Host, bidport):
     port = bidport #connect to this port for bid over TCP
     print(port)
     global current_item
-    #connect to TCP port and make bid
+    
+    establishTcpConnection(Host, bidport)
+    
     bid = input("Enter the bid amount: ")
     send_msg = {
         'type': 'BID',

@@ -23,9 +23,9 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "192.168.1.12"  # this would normally be different and particular to the host machine ie client
+HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("192.168.1.12", 5024)
+SERVER = ("192.168.1.184", 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
@@ -34,7 +34,7 @@ tcp_ip = HOST  # won't usually, get tcp servers machines local ip address on LAN
 tcp_server_port = 5002
 MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're listening on
 # when sending msg's to all clients over TCP
-tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # TCP_CLIENT_PORT = 5071  # the port the client is listening for responses on
 # If we wanted to set the port the client would listen for responses on we'd bind it like so
@@ -42,11 +42,12 @@ tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #tcp_socket.connect((tcp_ip, tcp_server_port))
 
 
-
+'''
 def tcp_incoming():
     global current_port
     while True:
         msg_received = tcp_socket.recv(1024).decode('utf-8')
+'''
 # def tcp_incoming():
 #     global MY_TCP_PORT
 #     while True:
@@ -168,7 +169,9 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
+
         send_msg = get_port()
+        
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
@@ -177,14 +180,19 @@ def get_user_command():  # should be set on start up, include when sending TCP m
             pass
         sleep(0.2) #need to fix this
         global current_port
-        send_msg = get_bid(current_port)
+        print("current port is:")
+        print(current_port)
+       
+        send_msg = get_bid(HOST,current_port)
         ### Below, the message should be in tcp_messages.append, not udp
+        '''
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
+        '''
     elif choice is 'c':
         return
     else:
