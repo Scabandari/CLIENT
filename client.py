@@ -79,6 +79,7 @@ def udp_incoming():
     while True:
         message, addr = udp_socket.recvfrom(1024)
         message = message.decode('utf-8')
+        #don't know why but returing data from binary to dict gives me an error
         msg_dict = ast.literal_eval(message)
         if msg_dict['type'] == UPDATE_CLIENTS:
             update_txt(msg_dict['items'])
@@ -86,6 +87,7 @@ def udp_incoming():
         elif msg_dict['type'] == ITEMPORT:
             global current_port
             current_port = msg_dict['port']
+            print(current_port)
         print("Received udp message: " + message)
 
 
@@ -160,7 +162,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
             connection, a client can bid on the item by sending a BID message."""
         print("These are the items available:")
         #message to show all items
-        send_msg = getShowAllMessages()
+        #send_msg = getShowAllMessages()
         # need to differentiate these two messages
         
         try:
