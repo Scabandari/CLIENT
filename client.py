@@ -1,7 +1,8 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages, get_port
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages, get_port, get_bid
 import threading
+from time import sleep
 
 """Here I'm thinking we need 2 threads in addition to the main thread. One that constantly checks 
     a list to see if there are user msg's to be sent over UDP and then another thread doing same 
@@ -9,7 +10,10 @@ import threading
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
-UPDATE_CLIENTS = 'UPDATE-CLIENTS' 
+UPDATE_CLIENTS = 'UPDATE-CLIENTS'
+ITEMPORT = 'ITEMPORT' 
+current_port = 0
+current_item = 0
 
 udp_messages = []
 udp_msg_lock = threading.Lock()
@@ -30,7 +34,7 @@ tcp_ip = HOST  # won't usually, get tcp servers machines local ip address on LAN
 tcp_server_port = 5002
 MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're listening on
 # when sending msg's to all clients over TCP
-#tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # TCP_CLIENT_PORT = 5071  # the port the client is listening for responses on
 # If we wanted to set the port the client would listen for responses on we'd bind it like so
@@ -38,6 +42,11 @@ MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're l
 #tcp_socket.connect((tcp_ip, tcp_server_port))
 
 
+
+def tcp_incoming():
+    global current_port
+    while True:
+        msg_received = tcp_socket.recv(1024).decode('utf-8')
 # def tcp_incoming():
 #     global MY_TCP_PORT
 #     while True:
@@ -73,6 +82,9 @@ def udp_incoming():
         if msg_dict['type'] == UPDATE_CLIENTS:
             update_txt(msg_dict['items'])
             continue
+        elif msg_dict['type'] == ITEMPORT:
+            global current_port
+            current_port = msg_dict['port']
         print("Received udp message: " + message)
 
 
@@ -149,15 +161,30 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         #message to show all items
         send_msg = getShowAllMessages()
         # need to differentiate these two messages
-        #send_msg = get_port()
+        
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        bidchoice = input("Enter the number of the item you wish to bid on")
-        #if (bidchoice.get_port() != None):
+        send_msg = get_port()
+        try:
+            send_bytes = dict_to_bytes(send_msg)
+            with udp_msg_lock:
+                udp_messages.append(send_bytes)
+        except UnboundLocalError:
+            pass
+        sleep(0.2) #need to fix this
+        global current_port
+        send_msg = get_bid(current_port)
+        ### Below, the message should be in tcp_messages.append, not udp
+        try:
+            send_bytes = dict_to_bytes(send_msg)
+            with udp_msg_lock:
+                udp_messages.append(send_bytes)
+        except UnboundLocalError:
+            pass
     elif choice is 'c':
         return
     else:
