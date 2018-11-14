@@ -19,9 +19,9 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "172.31.119.150"  # this would normally be different and particular to the host machine ie client
+HOST = "192.168.1.12"  # this would normally be different and particular to the host machine ie client
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("172.31.119.150", 5024)
+SERVER = ("192.168.1.12", 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
@@ -145,7 +145,8 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         """Before bidding for a given item, a registered client has to establish a TCP connection to
             the TCP socket associated with the item of interest at the server side. After this
             connection, a client can bid on the item by sending a BID message."""
-        print("These are the items available")
+        print("These are the items available:")
+        #message to show all items
         send_msg = getShowAllMessages()
         # need to differentiate these two messages
         #send_msg = get_port()
@@ -155,6 +156,8 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
+        bidchoice = input("Enter the number of the item you wish to bid on")
+        #if (bidchoice.get_port() != None):
     elif choice is 'c':
         return
     else:
