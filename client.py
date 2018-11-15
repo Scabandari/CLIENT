@@ -23,7 +23,7 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "172.31.45.230"  # this would normally be different and particular to the host machine ie client
+HOST = "172.31.73.71"  # this would normally be different and particular to the host machine ie client
 UDP_PORT = 5075  # Clients UDP port they are listening on
 SERVER = (HOST, 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -159,7 +159,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        sleep(0.2) #need to fix this
+        #sleep(0.2) #need to fix this
         global current_port
         get_bid(current_port)
 
