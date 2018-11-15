@@ -1,6 +1,6 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages, get_port, get_bid
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages, get_port, get_bid, sendTCPMessage
 import threading
 from time import sleep
 
@@ -48,6 +48,12 @@ def tcp_incoming():
     while True:
         msg_received = tcp_socket.recv(1024).decode('utf-8')
 '''
+def tcp_outgoing():
+    while True:
+        if tcp_messages:
+            with tcp_msg_lock:
+                msg = tcp_messages.pop(0)
+            sendTCPMessage(msg)
 # def tcp_incoming():
 #     global MY_TCP_PORT
 #     while True:
@@ -111,8 +117,8 @@ udp_outgoing_thread.start()
 # tcp_incoming_thread = threading.Thread(target=tcp_incoming)
 # tcp_incoming_thread.start()
 #
-# tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
-# tcp_outgoing_thread.start()
+tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
+tcp_outgoing_thread.start()
 
 
 def get_user_command():  # should be set on start up, include when sending TCP msg's
@@ -181,20 +187,15 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         except UnboundLocalError:
             pass
         sleep(0.2) #need to fix this
-        global current_port
-        print("current port is:")
-        print(current_port)
        
         send_msg = get_bid(HOST,current_port)
         ### Below, the message should be in tcp_messages.append, not udp
-        '''
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
-                udp_messages.append(send_bytes)
+                tcp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        '''
     elif choice is 'c':
         return
     else:
