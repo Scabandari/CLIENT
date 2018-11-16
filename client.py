@@ -1,6 +1,6 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, getShowAllMessages, get_port, get_bid, sendTCPMessage
+from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, show_all_messages, get_port, get_bid, sendTCPMessage
 import threading
 from time import sleep
 
@@ -174,7 +174,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
             connection, a client can bid on the item by sending a BID message."""
         print("These are the items available:")
         # message to show all items
-        send_msg = getShowAllMessages()
+        send_msg = show_all_messages()
         # need to differentiate these two messages
         
         try:
@@ -183,7 +183,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-
+        sleep(0.4)  # temp fix for display to allow udp incoming thread to run before the rest of the code runs
         send_msg = get_port()
         
         try:
@@ -192,9 +192,9 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        sleep(0.4) # need to fix this
+        sleep(0.4)  # need to fix this
        
-        send_msg = get_bid(HOST,current_port)
+        send_msg = get_bid(HOST, current_port)
 
         try:
             send_bytes = dict_to_bytes(send_msg)
