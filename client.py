@@ -46,7 +46,13 @@ MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're l
 def tcp_incoming():
     global current_port
     while True:
-        msg_received = tcp_socket.recv(1024).decode('utf-8')
+        msg_received = receiveTCPMessage()
+        msg = ast.literal_eval(msg_received)
+        with terminal_lock:
+            print("Received tcp msg: " + str(msg))
+        try:
+            if msg['set port']:
+                current 
 '''
 def tcp_outgoing():
     while True:
@@ -114,8 +120,8 @@ udp_incoming_thread.start()
 udp_outgoing_thread = threading.Thread(target=udp_outgoing)
 udp_outgoing_thread.start()
 
-# tcp_incoming_thread = threading.Thread(target=tcp_incoming)
-# tcp_incoming_thread.start()
+#tcp_incoming_thread = threading.Thread(target=tcp_incoming)
+#tcp_incoming_thread.start()
 #
 tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
 tcp_outgoing_thread.start()
@@ -167,8 +173,8 @@ def get_user_command():  # should be set on start up, include when sending TCP m
             the TCP socket associated with the item of interest at the server side. After this
             connection, a client can bid on the item by sending a BID message."""
         print("These are the items available:")
-        #message to show all items
-        #send_msg = getShowAllMessages()
+        # message to show all items
+        send_msg = getShowAllMessages()
         # need to differentiate these two messages
         
         try:
@@ -186,10 +192,10 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        sleep(0.2) #need to fix this
+        sleep(0.4) # need to fix this
        
         send_msg = get_bid(HOST,current_port)
-        ### Below, the message should be in tcp_messages.append, not udp
+
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
