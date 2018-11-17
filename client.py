@@ -192,7 +192,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        sleep(0.4)  # need to fix this
+        sleep(0.8)  # need to fix this
        
         send_msg = get_bid(HOST, current_port)
 
