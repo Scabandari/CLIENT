@@ -91,11 +91,12 @@ def update_txt(items):
     with open('toGui.txt', 'a') as f:
         f.write(str(gui_tup))
 
-def getShowAllMessages():
+
+def show_all_messages():
     send_msg = {'type': 'SHOW_ITEMS'}
     return send_msg
 
-#I don't see the item 
+
 def get_port():
     bid_item = input("Enter the Item Number that you wish to bid on: ")
     global current_item
@@ -106,17 +107,20 @@ def get_port():
     }
     return send_msg
 
+
 def establishTcpConnection(HOST, portNumber):
     print("Connecting to TCP connection for the item")
-    tcp_socket.connect((HOST, 5050))
+    tcp_socket.connect((HOST, portNumber))
     data = tcp_socket.recv(1024)
     print(data)
+
 
 def sendTCPMessage(msg):
     tcp_socket.send(msg)
 
+
 def get_bid(Host, bidport):
-    port = bidport #connect to this port for bid over TCP
+    port = bidport  # connect to this port for bid over TCP
     print(port)
     global current_item
     
