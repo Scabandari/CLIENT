@@ -1,6 +1,8 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, show_all_messages, get_port, get_bid, sendTCPMessage
+from utils import (get_registration, get_unregistration, dict_to_bytes, get_offer,
+                   update_txt, show_all_messages, get_port, get_bid, sendTCPMessage,
+                   receive_tcp_messages, start_send_to_tcp, tcp_received_messages)
 import threading
 from time import sleep
 
@@ -23,12 +25,13 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
+HOST = "192.168.1.12"  # this would normally be different and particular to the host machine ie client
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("192.168.1.184", 5024)
+SERVER = ("192.168.1.12", 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
+
 
 tcp_ip = HOST  # won't usually, get tcp servers machines local ip address on LAN
 tcp_server_port = 5002
@@ -41,19 +44,20 @@ MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're l
 # tcp_socket.bind((HOST, TCP_CLIENT_PORT))
 #tcp_socket.connect((tcp_ip, tcp_server_port))
 
-
-'''
 def tcp_incoming():
-    global current_port
     while True:
-        msg_received = receiveTCPMessage()
-        msg = ast.literal_eval(msg_received)
-        with terminal_lock:
-            print("Received tcp msg: " + str(msg))
-        try:
-            if msg['set port']:
-                current 
-'''
+        if start_send_to_tcp:
+            with terminal_lock:
+                message = tcp_received_messages.pop(0)
+                print("message received over tcp: ")
+                print(message)
+            '''
+            try:
+                if msg['set port']:
+                    current 
+            '''
+
+
 def tcp_outgoing():
     while True:
         if tcp_messages:
@@ -91,7 +95,6 @@ def udp_incoming():
     while True:
         message, addr = udp_socket.recvfrom(1024)
         message = message.decode('utf-8')
-        #don't know why but returing data from binary to dict gives me an error
         msg_dict = ast.literal_eval(message)
         if msg_dict['type'] == UPDATE_CLIENTS:
             update_txt(msg_dict['items'])
@@ -120,9 +123,9 @@ udp_incoming_thread.start()
 udp_outgoing_thread = threading.Thread(target=udp_outgoing)
 udp_outgoing_thread.start()
 
-#tcp_incoming_thread = threading.Thread(target=tcp_incoming)
-#tcp_incoming_thread.start()
-#
+tcp_incoming_thread = threading.Thread(target=tcp_incoming)
+tcp_incoming_thread.start()
+
 tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
 tcp_outgoing_thread.start()
 
