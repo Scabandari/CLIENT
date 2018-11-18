@@ -9,7 +9,6 @@ REQUEST_NUMBER = 1
 GUI_MSG_NUMBER = 1
 current_item = 0
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-start_tcp_incoming = False
 
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
@@ -113,7 +112,8 @@ def get_port():
 def establishTcpConnection(HOST, portNumber):
     print("Connecting to TCP connection for the item")
     tcp_socket.connect((HOST, portNumber))
-
+    initial_data = tcp_socket.recv(1024)
+    print(initial_data)
 
 
 
