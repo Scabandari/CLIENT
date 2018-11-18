@@ -9,11 +9,7 @@ REQUEST_NUMBER = 1
 GUI_MSG_NUMBER = 1
 current_item = 0
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-ip = socket.gethostbyname(socket.gethostname())
-client_tcp_port = 6000  # this won't work for multiple client, should probably have a function that distributes this nb
-tcp_socket.bind((ip, client_tcp_port))
-tcp_received_messages = [{}]
-start_send_to_tcp = False
+start_tcp_incoming = False
 
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
@@ -114,26 +110,11 @@ def get_port():
     return send_msg
 
 
-def receive_tcp_messages():
-    print('hello')
-    data = tcp_socket.recv(1024)
-    print("from the tcp test: ")
-    print(data)
-    data = data.decode('utf-8')
-    msg_dict = ast.literal_eval(data)
-    tcp_received_messages.append(msg_dict)
-    return data
-
-
 def establishTcpConnection(HOST, portNumber):
     print("Connecting to TCP connection for the item")
     tcp_socket.connect((HOST, portNumber))
-    global start_send_to_tcp
-    start_send_to_tcp = True  # to allow to receive from tcp
-    data = tcp_socket.recv(1024)
-    data = data.decode('utf-8')
-    msg_dict = ast.literal_eval(data)
-    tcp_received_messages.append(msg_dict)
+
+
 
 
 def sendTCPMessage(msg):

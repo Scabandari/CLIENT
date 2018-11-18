@@ -2,7 +2,7 @@ import socket
 import ast
 from utils import (get_registration, get_unregistration, dict_to_bytes, get_offer,
                    update_txt, show_all_messages, get_port, get_bid, sendTCPMessage,
-                   receive_tcp_messages, start_send_to_tcp, tcp_received_messages)
+                   tcp_socket, start_tcp_incoming)
 import threading
 from time import sleep
 
@@ -25,9 +25,9 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "192.168.1.12"  # this would normally be different and particular to the host machine ie client
+HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("192.168.1.12", 5024)
+SERVER = ("192.168.1.184", 5024)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
@@ -44,13 +44,16 @@ MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're l
 # tcp_socket.bind((HOST, TCP_CLIENT_PORT))
 #tcp_socket.connect((tcp_ip, tcp_server_port))
 
+
 def tcp_incoming():
     while True:
-        if start_send_to_tcp:
-            with terminal_lock:
-                message = tcp_received_messages.pop(0)
+            with tcp_msg_lock:
+                print('hello, im in tcp_incoming')
+                message, addr = tcp_socket.recvfrom(1024)
+                message = message.decode('utf-8')
+                msg_dict = ast.literal_eval(message)
                 print("message received over tcp: ")
-                print(message)
+                print(msg_dict)
             '''
             try:
                 if msg['set port']:
@@ -63,7 +66,8 @@ def tcp_outgoing():
         if tcp_messages:
             with tcp_msg_lock:
                 msg = tcp_messages.pop(0)
-            sendTCPMessage(msg)
+                sendTCPMessage(msg)
+
 # def tcp_incoming():
 #     global MY_TCP_PORT
 #     while True:
@@ -124,7 +128,6 @@ udp_outgoing_thread = threading.Thread(target=udp_outgoing)
 udp_outgoing_thread.start()
 
 tcp_incoming_thread = threading.Thread(target=tcp_incoming)
-tcp_incoming_thread.start()
 
 tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
 tcp_outgoing_thread.start()
@@ -199,6 +202,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
        
         send_msg = get_bid(HOST, current_port)
 
+        tcp_incoming_thread.start()
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
