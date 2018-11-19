@@ -10,6 +10,8 @@ from time import sleep
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
+RETURN_MSG = 'RETURN-MSG'
+UPDATE_STATE = 'UPDATE-STATE'
 UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 ITEMPORT = 'ITEMPORT' 
 current_port = 0
@@ -23,9 +25,12 @@ tcp_msg_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
+#HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
+HOST = "192.168.0.107"
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("192.168.1.184", 5024)
+SERVER_IP = "192.168.0.107"
+SERVER_UDP_PORT = 5024
+SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
@@ -91,16 +96,16 @@ def udp_incoming():
     while True:
         message, addr = udp_socket.recvfrom(1024)
         message = message.decode('utf-8')
-        #don't know why but returing data from binary to dict gives me an error
         msg_dict = ast.literal_eval(message)
         if msg_dict['type'] == UPDATE_CLIENTS:
-            update_txt(msg_dict['items'])
+            update_txt(UPDATE_STATE, msg_dict['items'])
             continue
         elif msg_dict['type'] == ITEMPORT:
             global current_port
             current_port = msg_dict['port']
             print(current_port)
         print("Received udp message: " + message)
+        update_txt(RETURN_MSG, message)
 
 
 def udp_outgoing():

@@ -2,6 +2,7 @@ from random import randint
 import json
 import socket
 
+#UPDATE_STATE = 'UPDATE-STATE'
 REGISTER = 'REGISTER'
 REGISTERED = 'REGISTERED'
 REQUEST_NUMBER = 1
@@ -79,17 +80,18 @@ def dict_to_bytes(dict_):
     return bytes_
 
 
-def update_txt(items):
+def update_txt(msg_type, items):
     """
     This function updates the text file that passes msg's to the gui. Mainly the state of items for bid
     :param items:
     :return:
     """
     global GUI_MSG_NUMBER
-    gui_tup = (GUI_MSG_NUMBER, items)
+    gui_tup = (GUI_MSG_NUMBER, msg_type, items)
     GUI_MSG_NUMBER += 1
     with open('toGui.txt', 'a') as f:
         f.write(str(gui_tup))
+        f.write("\n")
 
 
 def show_all_messages():
