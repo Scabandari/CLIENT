@@ -1,5 +1,6 @@
 from random import randint
 import json
+import ast
 import socket
 
 #UPDATE_STATE = 'UPDATE-STATE'
@@ -113,8 +114,9 @@ def get_port():
 def establishTcpConnection(HOST, portNumber):
     print("Connecting to TCP connection for the item")
     tcp_socket.connect((HOST, portNumber))
-    data = tcp_socket.recv(1024)
-    print(data)
+    initial_data = tcp_socket.recv(1024)
+    print(initial_data)
+
 
 
 def sendTCPMessage(msg):
