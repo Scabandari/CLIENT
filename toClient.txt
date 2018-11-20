@@ -1,0 +1,2 @@
+(0, 'REGISTER', {'request': 0, 'type': 'REGISTER', 'name': 'ryan', 'ip': '192.168.0.107', 'port': '5555'})
+(1, 'OFFER', {'request': 0, 'type': 'OFFER', 'name': 'ryan', 'ip': '192.168.0.107', 'description': 'bat', 'minimum bid': '10'})

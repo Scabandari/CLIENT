@@ -1,17 +1,29 @@
 from random import randint
 import json
 import socket
+import ast
 
 #UPDATE_STATE = 'UPDATE-STATE'
 REGISTER = 'REGISTER'
 REGISTERED = 'REGISTERED'
+DE_REGISTER = 'DE-REGISTER'
 REQUEST_NUMBER = 1
-GUI_MSG_NUMBER = 1
+GUI_MSG_NUMBER = 1  # GUI is receiver here
+# CLIENT_MSG_NUMBER = 1
 current_item = 0
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
+
+
+def msg_to_queue(udp_queue, queue_lock, msg):
+    """
+         This function takes a msg and a queue and binarizes it then adds to the queue
+    """
+    msg = dict_to_bytes(msg)
+    with queue_lock:
+        udp_queue.append(msg)
 
 
 def req_number():
@@ -34,7 +46,7 @@ def get_registration(my_tcp_port):
         'type': REGISTER,
         'name': name,
         'ip': ip_address,
-        'port': my_tcp_port
+        'port': my_tcp_port  #todo should be using port from user import here?
     }
     return send_msg
 
@@ -46,7 +58,7 @@ def get_unregistration():
     ip = '192.168.0.107'
     send_msg = {
         'request': req_number(),
-        'type': 'DE-REGISTER',
+        'type': DE_REGISTER,
         'name': name,
         'ip': ip
     }

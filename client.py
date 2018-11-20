@@ -1,6 +1,16 @@
 import socket
 import ast
-from utils import get_registration, get_unregistration, dict_to_bytes, get_offer, update_txt, show_all_messages, get_port, get_bid, sendTCPMessage
+from utils import (get_registration,
+                   get_unregistration,
+                   dict_to_bytes,
+                   get_offer,
+                   update_txt,
+                   show_all_messages,
+                   get_port,
+                   get_bid,
+                   sendTCPMessage,
+                   req_number,
+                   msg_to_queue)
 import threading
 from time import sleep
 
@@ -10,6 +20,7 @@ from time import sleep
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
+CLIENT_MSG_NUMBER = 0  # next number of incoming msg from gui to client
 RETURN_MSG = 'RETURN-MSG'
 UPDATE_STATE = 'UPDATE-STATE'
 UPDATE_CLIENTS = 'UPDATE-CLIENTS'
@@ -89,11 +100,42 @@ def tcp_outgoing():
 #             with terminal_lock:
 #                 print("Received back tcp response: " + return_msg)
 
+# todo WHY DOES THIS WORK IN get_user_command OPTION C BUT NOT IN IT'S OWN THREAD?
+def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
+    # global CLIENT_MSG_NUMBER
+    # global udp_msg_lock
+    # global udp_messages
+    """ Read the next last line of text from toClient.txt and if """
+    # todo read the next line in toClient.txt and put the msg in the correct queue
+    while True:
+        with open('toClient.txt', 'r') as f:
+            for line in f:  # line ===> (number, state_dict)
+                try:
+                    line = ast.literal_eval(line)
+                    if int(line[0]) >= CLIENT_MSG_NUMBER_:
+                        print("reading toClient.txt")
+                        CLIENT_MSG_NUMBER_ += 1
+                        msg_for_server = line[2]
+                        msg_for_server['request'] = req_number()
+                        send_bytes = dict_to_bytes(line[2])
+                        with udp_msg_lock_:
+                            udp_messages_.append(send_bytes)
+                        # try:
+                        #     send_bytes = dict_to_bytes(line[2])
+                        #     with udp_msg_lock:
+                        #         udp_messages.append(send_bytes)
+                        # except UnboundLocalError:
+                        #     pass
+                        # msg_to_queue(udp_messages, udp_msg_lock, line[2])
+                except SyntaxError:
+                    print("Could not read line in toClient.txt")
+                    pass
 
-# todo test this
+
 def udp_incoming():
     # there are times when the UDP server will send all connected clients a msg such as NEW-ITEM msg's
     while True:
+        #print("udp_outgoing")
         message, addr = udp_socket.recvfrom(1024)
         message = message.decode('utf-8')
         msg_dict = ast.literal_eval(message)
@@ -110,6 +152,7 @@ def udp_incoming():
 
 def udp_outgoing():
     while True:
+        #print("udp_outgoing")
         if udp_messages:  # msg's to send
             with udp_msg_lock:
                 msg = udp_messages.pop(0)
@@ -119,17 +162,23 @@ def udp_outgoing():
             # print("Receive back udp response: " + response)
 
 
+gui_msg_reader = threading.Thread(target=gui_msg, args=(udp_messages, udp_msg_lock, CLIENT_MSG_NUMBER))
+gui_msg_reader.start()
+
 udp_incoming_thread = threading.Thread(target=udp_incoming)
 udp_incoming_thread.start()
 
 udp_outgoing_thread = threading.Thread(target=udp_outgoing)
 udp_outgoing_thread.start()
 
-#tcp_incoming_thread = threading.Thread(target=tcp_incoming)
-#tcp_incoming_thread.start()
-#
+# tcp_incoming_thread = threading.Thread(target=tcp_incoming)
+# tcp_incoming_thread.start()
+
 tcp_outgoing_thread = threading.Thread(target=tcp_outgoing)
 tcp_outgoing_thread.start()
+
+# gui_msg_reader = threading.Thread(target=gui_msg, args=(udp_messages, udp_msg_lock, CLIENT_MSG_NUMBER))
+# gui_msg_reader.start()
 
 
 def get_user_command():  # should be set on start up, include when sending TCP msg's
@@ -209,14 +258,29 @@ def get_user_command():  # should be set on start up, include when sending TCP m
             pass
     elif choice is 'c':
         return
+        # gui_msg(udp_messages, udp_msg_lock, CLIENT_MSG_NUMBER)
     else:
         print("That option isn't available")
         return None
 
 
-while True:
-    get_user_command()
+#########################################################################################
+## FOR NOW YOU GUYS ARE USING THIS
+# while True:
+#     get_user_command()
+##########################################################################################
 
 
+########################################################################################
+## ONCE GUI IS FINISHED WE USE THIS
+udp_incoming_thread.join()
 
+udp_outgoing_thread.join()
+
+# tcp_incoming_thread.join()
+
+tcp_outgoing_thread.join()
+
+gui_msg_reader.join()
+########################################################################################
 
