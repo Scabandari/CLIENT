@@ -31,9 +31,9 @@ tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
-HOST = "192.168.0.107"
+HOST = "192.168.2.245"
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER_IP = "192.168.0.107"
+SERVER_IP = "192.168.2.245"
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -265,8 +265,8 @@ def get_user_command():  # should be set on start up, include when sending TCP m
 
 #########################################################################################
 ## FOR NOW YOU GUYS ARE USING THIS
-# while True:
-#     get_user_command()
+#while True:
+    #get_user_command()
 ##########################################################################################
 
 
@@ -276,7 +276,7 @@ udp_incoming_thread.join()
 
 udp_outgoing_thread.join()
 
-# tcp_incoming_thread.join()
+#tcp_incoming_thread.join()
 
 tcp_outgoing_thread.join()
 
