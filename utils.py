@@ -142,7 +142,11 @@ def get_bid(Host, bidport, bid_param=None):
 
 
     establishTcpConnection(Host, bidport)
-
+    test_bid = 10
+    if bid_param is None:
+        bid = test_bid
+    else:
+        bid = bid_param
     send_msg = {
         'type': 'BID',
         'request': req_number(),
