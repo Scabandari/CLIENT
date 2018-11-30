@@ -32,9 +32,9 @@ tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
-HOST = "172.31.5.102"
+HOST = "172.31.121.120"
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER_IP = "172.31.5.102"
+SERVER_IP = "172.31.121.120"
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -124,8 +124,38 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                         msg_for_server['request'] = req_number()
                         send_bytes = dict_to_bytes(line[2])
                         if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
-                            with tcp_msg_lock:
-                                tcp_messages.append(send_bytes)
+                            item = line[2]['item #']
+                            amount = line[2]['amount']
+                            name = line[2]['name']
+                            send_msg = get_port(item)
+                            try:
+                                send_bytes = dict_to_bytes(send_msg)
+                                with udp_msg_lock:
+                                    udp_messages.append(send_bytes)
+                            except UnboundLocalError:
+                                pass
+                            sleep(0.8)
+                            if current_port != 0:
+                                send_msg = get_bid(HOST, current_port, amount, name)
+
+                                global start_receiving_tcp_messages
+                                start_receiving_tcp_messages = True
+                                try:
+                                    send_bytes = dict_to_bytes(send_msg)
+                                    with tcp_msg_lock:
+                                        tcp_messages.append(send_bytes)
+                                except UnboundLocalError:
+                                    pass
+                            send_msg = show_all_messages()
+                            try:
+                                send_bytes = dict_to_bytes(send_msg)
+                                with udp_msg_lock:
+                                    udp_messages.append(send_bytes)
+                            except UnboundLocalError:
+                                pass
+                            else:
+                                print("This item does not exit")
+
                         else:  # else if not a bid we send over UDP
                             with udp_msg_lock_:
                                 udp_messages_.append(send_bytes)
@@ -245,7 +275,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
 
 
 
-        send_msg = get_port()
+        #send_msg = get_port()
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
@@ -255,7 +285,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         sleep(2)  # need to fix this
 
         if current_port != 0:
-            send_msg = get_bid(HOST, current_port)
+            #send_msg = get_bid(HOST, current_port)
 
             global start_receiving_tcp_messages
             start_receiving_tcp_messages = True
@@ -274,7 +304,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         print("That option isn't available")
         return None
 
-
+"""
 #########################################################################################
 ## FOR NOW YOU GUYS ARE USING THIS
 while True:
@@ -294,4 +324,4 @@ tcp_outgoing_thread.join()
 
 gui_msg_reader.join()
 ########################################################################################
-"""
+

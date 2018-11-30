@@ -112,13 +112,12 @@ def show_all_messages():
     return send_msg
 
 
-def get_port():  # bid_item=None here but pass it from what we get from gui
-    bid_item = input("Enter the Item Number that you wish to bid on: ")
+def get_port(item):  # bid_item=None here but pass it from what we get from gui
     global current_item
-    current_item = bid_item 
+    current_item = item 
     send_msg = {
         'type': 'GETPORT',
-        'item': bid_item 
+        'item': item 
     }
     return send_msg
 
@@ -135,23 +134,16 @@ def sendTCPMessage(msg):
     tcp_socket.send(msg)
 
 
-def get_bid(Host, bidport, bid_param=None):
-    port = bidport  # connect to this port for bid over TCP
-    print(port)
+def get_bid(Host, bidport, bid_param, name):
     global current_item
-
-
     establishTcpConnection(Host, bidport)
-    test_bid = 10
-    if bid_param is None:
-        bid = test_bid
-    else:
-        bid = bid_param
+    bid = bid_param
     send_msg = {
         'type': 'BID',
         'request': req_number(),
         'item': current_item,
-        'amount': bid
+        'amount': bid,
+        'name': name
     }
     return send_msg
 
