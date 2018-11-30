@@ -32,11 +32,9 @@ tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
-#HOST = "192.168.0.106"
-HOST = '172.31.12.213'
+HOST = "192.168.0.106"
 UDP_PORT = 5075  # Clients UDP port they are listening on
-#SERVER_IP = "192.168.0.106"
-SERVER_IP = '172.31.12.213'
+SERVER_IP = "192.168.0.106"
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -124,12 +122,10 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                         CLIENT_MSG_NUMBER_ += 1
                         msg_for_server = line[2]
                         msg_for_server['request'] = req_number()
-                        send_bytes = dict_to_bytes(msg_for_server)
+                        send_bytes = dict_to_bytes(line[2])
                         if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
-                            bid_dict = line[1]
-                            bid_dict['request']
-                            # with tcp_msg_lock:
-                            #     tcp_messages.append(send_bytes)
+                            with tcp_msg_lock:
+                                tcp_messages.append(send_bytes)
                         else:  # else if not a bid we send over UDP
                             with udp_msg_lock_:
                                 udp_messages_.append(send_bytes)
@@ -276,8 +272,8 @@ def get_user_command():  # should be set on start up, include when sending TCP m
 
 #########################################################################################
 ## FOR NOW YOU GUYS ARE USING THIS
-# while True:
-#     get_user_command()
+#while True:
+    #get_user_command()
 ##########################################################################################
 
 
@@ -287,7 +283,7 @@ udp_incoming_thread.join()
 
 udp_outgoing_thread.join()
 
-# tcp_incoming_thread.join()
+#tcp_incoming_thread.join()
 
 tcp_outgoing_thread.join()
 

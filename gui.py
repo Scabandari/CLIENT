@@ -15,6 +15,12 @@ RETURN_MSG = 'RETURN-MSG'
 REGISTER = 'REGISTER'
 DE_REGISTER = 'DE-REGISTER'
 OFFER = 'OFFER'
+BID = 'BID'
+HIGHEST = 'HIGHEST'
+BID_OVER = 'BID_OVER'
+WIN = 'WIN'
+BID_SOLDTO = 'BID_SOLDTO'
+BID_NOTSOLD = 'BID_NOTSOLD'
 
 # Types of msg's being received from client app
 OFFER_CONF = 'OFFER-CONF' # todo make sure all these are being handeled
@@ -116,6 +122,57 @@ def msg_for_client(msg_type):
             'item #': item_number.get()
         }
     #elif tcp msg's make your own version of msg w/ needed values
+
+    #Not sure if these are all needed, adding them all for now
+    elif msg_type == BID:
+        msg = {
+            'request': 0,
+            'type': msg_type,
+            'item #': itemNum.get(),
+            'amount': amount.get()
+        }
+    elif msg_type == HIGHEST:
+        msg = {
+            'request': 0,
+            'type': msg_type,
+            'item #': 0, #needs to be read from file
+            'amount': 0 #needs to be read from file
+        }
+    elif msg_type == WIN:
+        msg = {
+            'request': 0,
+            'type': msg_type,
+            'item #': 0, #needs to be read from file
+            'Name': 'Adam', #needs to be read from file
+            'ip': '192.168.2.245', #needs to be read from file
+            'port': 0, #needs to be read from file
+            'amount': 0 #needs to be read from file
+
+        }
+    elif msg_type == BID_OVER:
+        msg = {
+            'request': 0,
+            'type': msg_type,
+            'item #': 0, #needs to be read from file
+            'amount': 0 #needs to be read from file
+        }
+    elif msg_type == BID_SOLDTO:
+        msg = {
+            'request': 0,
+            'type': msg_type,
+            'item #': 0, #needs to be read from file
+            'name': 'Adam', #needs to be read from file
+            'ip': '192.168.2.245', #needs to be read from file
+            'port': 0, #needs to be read from file
+            'amount': 0, #needs to be read from file
+        }
+    elif msg_type == BID_NOTSOLD:
+        msg = {
+            'request': 0,
+            'type': msg_type,
+            'item #': 0, #needs to be read from file
+            'reason': 'No bids' #needs to be read from file
+        }
     return msg
 
 
@@ -205,6 +262,8 @@ name_offer = StringVar()
 ip_offer = StringVar()
 description = StringVar()
 min_bid = StringVar()
+itemNum = StringVar()
+amount = StringVar()
 
 return_msg_offer = StringVar()
 
