@@ -122,10 +122,12 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                         CLIENT_MSG_NUMBER_ += 1
                         msg_for_server = line[2]
                         msg_for_server['request'] = req_number()
-                        send_bytes = dict_to_bytes(line[2])
+                        send_bytes = dict_to_bytes(msg_for_server)
                         if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
-                            with tcp_msg_lock:
-                                tcp_messages.append(send_bytes)
+                            bid_dict = line[1]
+                            bid_dict['request']
+                            # with tcp_msg_lock:
+                            #     tcp_messages.append(send_bytes)
                         else:  # else if not a bid we send over UDP
                             with udp_msg_lock_:
                                 udp_messages_.append(send_bytes)
