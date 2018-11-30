@@ -142,10 +142,7 @@ def get_bid(Host, bidport, bid_param=None):
 
 
     establishTcpConnection(Host, bidport)
-    if bid_param =None:
-        bid = input("Enter the bid amount: ")
-    else:
-        bid = bid_param
+
     send_msg = {
         'type': 'BID',
         'request': req_number(),
