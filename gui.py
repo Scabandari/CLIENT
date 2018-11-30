@@ -315,23 +315,17 @@ msg_box_make_bid = Message(make_bid_frame, textvariable=return_msg_bidding)
 msg_box_make_bid.grid(row=5)
 #################################################################################################################
 canvas = Canvas(root, borderwidth=0, background="#ffffff")
-#bid_items_frame = Frame(root, bg="blue", width=1000, height=500)
 bid_items_frame = Frame(canvas, bg="blue")
 vsb = Scrollbar(root, orient="vertical", command=canvas.yview)
 canvas.configure(yscrollcommand=vsb.set)
 vsb.pack(side="right", fill="y")
 canvas.pack(side="left", fill="both", expand=True)
 canvas.create_window((4, 4), window=bid_items_frame, anchor="nw")
-# scroll_bar = Scrollbar(bid_items_frame)
-# scroll_bar.pack(side=RIGHT, expand=1)
 
-#bid_items_frame.pack(side=RIGHT, expand=1)
 bid_items_label = Label(bid_items_frame, text="Bidding Items")
-#bid_items_label.grid(row=0, column=0)
 bid_items_label.pack(side=RIGHT, expand=1)
 
 msg_box = Message(bid_items_frame, textvariable=msg_box_str)
-#msg_box.grid(row=1, column=2)
 msg_box.pack(side=LEFT, expand=1)
 
 root.after(1000, read_state)
