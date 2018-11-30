@@ -112,13 +112,13 @@ def show_all_messages():
     return send_msg
 
 
-def get_port():  # bid_item=None here but pass it from what we get from gui
-    bid_item = input("Enter the Item Number that you wish to bid on: ")
+def get_port(item):  # bid_item=None here but pass it from what we get from gui
+   # bid_item = input("Enter the Item Number that you wish to bid on: ")
     global current_item
-    current_item = bid_item 
+    current_item = item
     send_msg = {
         'type': 'GETPORT',
-        'item': bid_item 
+        'item': item
     }
     return send_msg
 

@@ -124,8 +124,14 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                         msg_for_server['request'] = req_number()
                         send_bytes = dict_to_bytes(line[2])
                         if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
+                            bid_request = line[2]
+                            item_to_bid = bid_request['item #']
+                            msg = dict_to_bytes(get_port(item_to_bid))
                             with tcp_msg_lock:
-                                tcp_messages.append(send_bytes)
+                                tcp_messages.append(msg)
+                            msg = dict_to_bytes(get_bid(HOST,current_port, bid_request['amount']))
+                            with tcp_msg_lock:
+                                tcp_messages.append(msg)
                         else:  # else if not a bid we send over UDP
                             with udp_msg_lock_:
                                 udp_messages_.append(send_bytes)
@@ -243,8 +249,6 @@ def get_user_command():  # should be set on start up, include when sending TCP m
             pass
         sleep(0.5)  # temp fix for display to allow udp incoming thread to run before the rest of the code runs
 
-
-
         send_msg = get_port()
         try:
             send_bytes = dict_to_bytes(send_msg)
@@ -277,11 +281,11 @@ def get_user_command():  # should be set on start up, include when sending TCP m
 
 #########################################################################################
 ## FOR NOW YOU GUYS ARE USING THIS
-while True:
-    get_user_command()
+#while True:
+ #   get_user_command()
 ##########################################################################################
 
-"""
+
 ########################################################################################
 ## ONCE GUI IS FINISHED WE USE THIS
 udp_incoming_thread.join()
@@ -294,4 +298,3 @@ tcp_outgoing_thread.join()
 
 gui_msg_reader.join()
 ########################################################################################
-"""
