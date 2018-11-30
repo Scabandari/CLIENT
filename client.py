@@ -31,9 +31,9 @@ tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
-HOST = "192.168.2.245"
+HOST = "172.31.121.120"
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER_IP = "192.168.2.245"
+SERVER_IP = "172.31.121.120"
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -234,28 +234,33 @@ def get_user_command():  # should be set on start up, include when sending TCP m
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        sleep(0.4)  # temp fix for display to allow udp incoming thread to run before the rest of the code runs
+        sleep(0.5)  # temp fix for display to allow udp incoming thread to run before the rest of the code runs
+
+
+
         send_msg = get_port()
-        print(current_port)
         try:
             send_bytes = dict_to_bytes(send_msg)
             with udp_msg_lock:
                 udp_messages.append(send_bytes)
         except UnboundLocalError:
             pass
-        sleep(0.8)  # need to fix this
+        sleep(2)  # need to fix this
 
-        send_msg = get_bid(HOST, current_port)
+        if current_port != 0:
+            send_msg = get_bid(HOST, current_port)
 
-        global start_receiving_tcp_messages
-        start_receiving_tcp_messages = True
+            global start_receiving_tcp_messages
+            start_receiving_tcp_messages = True
 
-        try:
-            send_bytes = dict_to_bytes(send_msg)
-            with tcp_msg_lock:
-                tcp_messages.append(send_bytes)
-        except UnboundLocalError:
-            pass
+            try:
+                send_bytes = dict_to_bytes(send_msg)
+                with tcp_msg_lock:
+                    tcp_messages.append(send_bytes)
+            except UnboundLocalError:
+                pass
+        else:
+            print("This item does not exit")
     elif choice is 'c':
         return
     else:
@@ -265,21 +270,21 @@ def get_user_command():  # should be set on start up, include when sending TCP m
 
 #########################################################################################
 ## FOR NOW YOU GUYS ARE USING THIS
-#while True:
-    #get_user_command()
+while True:
+    get_user_command()
 ##########################################################################################
 
-
+"""
 ########################################################################################
 ## ONCE GUI IS FINISHED WE USE THIS
 udp_incoming_thread.join()
 
 udp_outgoing_thread.join()
 
-#tcp_incoming_thread.join()
+# tcp_incoming_thread.join()
 
 tcp_outgoing_thread.join()
 
 gui_msg_reader.join()
 ########################################################################################
-
+"""

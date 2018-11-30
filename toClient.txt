@@ -1,5 +1,0 @@
-(0, 'REGISTER', {'request': 0, 'type': 'REGISTER', 'name': 'rr', 'ip': '192.168.0.107', 'port': '111'})
-(1, 'REGISTER', {'request': 0, 'type': 'REGISTER', 'name': 'rr', 'ip': '192.168.0.107', 'port': '111'})
-(2, 'DE-REGISTER', {'request': 0, 'type': 'DE-REGISTER', 'name': 'rr', 'ip': '192.168.0.107'})
-(3, 'REGISTER', {'request': 0, 'type': 'REGISTER', 'name': 'rr', 'ip': '192.168.0.107', 'port': '111'})
-(4, 'OFFER', {'request': 0, 'type': 'OFFER', 'name': 'rr', 'ip': '192.168.0.107', 'description': 'bat', 'minimum bid': '10'})
