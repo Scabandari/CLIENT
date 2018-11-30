@@ -1,3 +1,2 @@
-(0, 'REGISTER', {'request': 0, 'type': 'REGISTER', 'name': 'ryan', 'ip': '192.168.0.106', 'port': '6666'})
-(1, 'OFFER', {'request': 0, 'type': 'OFFER', 'name': 'ryan', 'ip': '192.168.0.106', 'description': 'bat', 'minimum bid': '10'})
-(2, 'BID', {'request': 0, 'type': 'BID', 'name': 'ryan', 'ip': '192.168.0.106', 'amount': '15', 'item #': '1'})
+(0, 'REGISTER', {'request': 0, 'type': 'REGISTER', 'name': 'ryan', 'ip': '172.31.12.213', 'port': '5555'})
+(1, 'OFFER', {'request': 0, 'type': 'OFFER', 'name': 'ryan', 'ip': '172.31.12.213', 'description': 'bat', 'minimum bid': '10'})
