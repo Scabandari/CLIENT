@@ -12,6 +12,7 @@ from time import sleep
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
+BID = 'BID'
 CLIENT_MSG_NUMBER = 0  # next number of incoming msg from gui to client
 RETURN_MSG = 'RETURN-MSG'
 UPDATE_STATE = 'UPDATE-STATE'
@@ -31,9 +32,11 @@ tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
-HOST = "192.168.2.245"
+
+HOST = "192.168.0.106"
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER_IP = "192.168.2.245"
+SERVER_IP = "192.168.0.106"
+
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -53,6 +56,8 @@ MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're l
 # tcp_socket.bind((HOST, TCP_CLIENT_PORT))
 #tcp_socket.connect((tcp_ip, tcp_server_port))
 
+
+# we need to check the
 
 def tcp_incoming():
     while True:
@@ -120,8 +125,12 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                         msg_for_server = line[2]
                         msg_for_server['request'] = req_number()
                         send_bytes = dict_to_bytes(line[2])
-                        with udp_msg_lock_:
-                            udp_messages_.append(send_bytes)
+                        if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
+                            with tcp_msg_lock:
+                                tcp_messages.append(send_bytes)
+                        else:  # else if not a bid we send over UDP
+                            with udp_msg_lock_:
+                                udp_messages_.append(send_bytes)
                         # try:
                         #     send_bytes = dict_to_bytes(line[2])
                         #     with udp_msg_lock:
