@@ -124,7 +124,6 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                         msg_for_server['request'] = req_number()
                         send_bytes = dict_to_bytes(line[2])
                         if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
-<<<<<<< HEAD
                             item = line[2]['item #']
                             amount = line[2]['amount']
                             name = line[2]['name']
@@ -157,16 +156,6 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                             else:
                                 print("This item does not exit")
 
-=======
-                            bid_request = line[2]
-                            item_to_bid = bid_request['item #']
-                            msg = dict_to_bytes(get_port(item_to_bid))
-                            with tcp_msg_lock:
-                                tcp_messages.append(msg)
-                            msg = dict_to_bytes(get_bid(HOST,current_port, bid_request['amount']))
-                            with tcp_msg_lock:
-                                tcp_messages.append(msg)
->>>>>>> 3b116ad962f9f0d2cfcf8e3f29a82eab11aab14b
                         else:  # else if not a bid we send over UDP
                             with udp_msg_lock_:
                                 udp_messages_.append(send_bytes)
@@ -335,7 +324,3 @@ tcp_outgoing_thread.join()
 
 gui_msg_reader.join()
 ########################################################################################
-<<<<<<< HEAD
-
-=======
->>>>>>> 3b116ad962f9f0d2cfcf8e3f29a82eab11aab14b
