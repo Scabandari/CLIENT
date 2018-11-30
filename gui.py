@@ -19,10 +19,26 @@ OFFER = 'OFFER'
 # Types of msg's being received from client app
 OFFER_CONF = 'OFFER-CONF' # todo make sure all these are being handeled
 OFFER_DENIED = 'OFFER-DENIED'
+
 REGISTERED = 'REGISTERED'
 UNREGISTERED = 'UNREGISTERED'
 DEREG_CONF = 'DEREG-CONF'
 DEREG_DENIED = 'DEREG-DENIED'
+
+BID = 'BID'
+HIGHEST = 'HIGHEST'
+WIN = 'WIN'
+BID_OVER = 'BID-OVER'
+SOLD_TO = 'SOLD-TO'
+NOT_SOLD = 'NOT-SOLD'
+
+# offer_msgs = [OFFER_CONF, OFFER_DENIED]
+# registration_msgs = [REGISTERED, UNREGISTERED, DEREG_DENIED, DEREG_CONF]
+# bidding_msgs = [HIGHEST, WIN, BID_OVER, SOLD_TO, NOT_SOLD]
+# # For making bids
+
+# Types of return msg's for BIDDING
+# TODO WE NEED ALL TYPES
 
 register_received = [REGISTERED,  # types of return msg's to display in msg box for Register
                      UNREGISTERED,
@@ -31,7 +47,9 @@ register_received = [REGISTERED,  # types of return msg's to display in msg box 
 
 offer_received = [OFFER_CONF,  # types of return msg's to display in msg box for Offer
                   OFFER_DENIED]
-bid_received = []  # types of return msg's to display in msg box for Bidding
+
+
+bid_received = [HIGHEST, WIN, BID_OVER, SOLD_TO, NOT_SOLD]  # types of return msg's to display in msg box for Bidding
 
 
 def register_client(event):
@@ -51,8 +69,14 @@ def offer_client(event):
     update_txt(OFFER, msg)
 
 
+def make_bid_client(event):
+    msg = msg_for_client(BID)
+    update_txt(BID, msg)
+
+
 # todo ADD CASES FOR TCP MSG'S HERE, MAKE CORRESPONDING FUNCTION FOR BUTTON LIKE register_client(), deregister_client()
 def msg_for_client(msg_type):
+    """Passing msg's to CLIENT from gui"""
     global name
     global ip
     global port
@@ -82,6 +106,15 @@ def msg_for_client(msg_type):
             'description': description.get(),
             'minimum bid': min_bid.get()
         }
+    elif msg_type == BID:
+        msg = {
+            'request': 0,
+            'type': msg_type,
+            'name': name_bidding.get(),
+            'ip': ip_bidding.get(),
+            'amount': amount.get(),
+            'item #': item_number.get()
+        }
     #elif tcp msg's make your own version of msg w/ needed values
     return msg
 
@@ -108,6 +141,8 @@ def update_return_msg(msg_):
         return_msg.set(msg_)
     elif ret_msg['type'] in offer_received:
         return_msg_offer.set(msg_)
+    elif ret_msg['type'] in bid_received:
+        return_msg_bidding.set(msg_)
 
 
 def update_bids():
@@ -123,6 +158,10 @@ def update_bids():
 
 
 def read_state():
+    """
+    This is where we're getting return msg's from the CLIENT
+    :return:
+    """
     global state
     global next_command
     try:
@@ -168,6 +207,14 @@ description = StringVar()
 min_bid = StringVar()
 
 return_msg_offer = StringVar()
+
+############# Make Bids
+name_bidding = StringVar()
+ip_bidding = StringVar()
+amount = StringVar()
+item_number = StringVar()
+
+return_msg_bidding = StringVar()
 #########################################################################
 register_frame = Frame(root, bg="orange", width=500, height=500)
 register_frame.pack(side=LEFT, expand=1)
@@ -202,6 +249,7 @@ entry_port.grid(row=2, column=1)
 
 return_msg_box.grid(row=5)
 ####################################################################################################################
+# OFFERS
 offer_frame = Frame(root, bg="orange", width=500, height=500)
 offer_frame.pack(side=BOTTOM, expand=1)
 
@@ -233,14 +281,38 @@ offer.grid(row=4)
 msg_box_offer = Message(offer_frame, textvariable=return_msg_offer)
 
 msg_box_offer.grid(row=5)
+###############################################################################################################
+# Make Bids
+make_bid_frame = Frame(root, bg="green", width=500, height=500)
+make_bid_frame.pack(side=BOTTOM, expand=1)
 
+name_label_make_bid = Label(make_bid_frame, text="Name: ")
+ip_label_make_bid = Label(make_bid_frame, text="IP address: ")
+bid_amount_label = Label(make_bid_frame, text="Bid Amount: ")
+item_number_label = Label(make_bid_frame, text="Item #: ")
 
-# 'type': 'OFFER',
-# 'request': req_number(),
-# 'name': name,
-# 'ip': ip_address,
-# 'description': description,
-# 'minimum bid': min_bid
+name_label_make_bid.grid(row=0)
+ip_label_make_bid.grid(row=1)
+bid_amount_label.grid(row=2)
+item_number_label.grid(row=3)
+
+entry_name_make_bid = Entry(make_bid_frame, textvariable=name_bidding)
+entry_ip_make_bid = Entry(make_bid_frame, textvariable=ip_bidding)
+bid_amount = Entry(make_bid_frame, textvariable=amount)
+item_number = Entry(make_bid_frame, textvariable=item_number)
+
+entry_name_make_bid.grid(row=0, column=1)
+entry_ip_make_bid.grid(row=1, column=1)
+bid_amount.grid(row=2, column=1)
+item_number.grid(row=3, column=1)
+
+make_bid = Button(make_bid_frame, text="Make Bid", bg="green", fg="black")
+make_bid.bind("<Button-1>", make_bid_client)  # <Button-1> == left mouse button
+make_bid.grid(row=4)
+
+msg_box_make_bid = Message(make_bid_frame, textvariable=return_msg_bidding)
+
+msg_box_make_bid.grid(row=5)
 #################################################################################################################
 bid_items_frame = Frame(root, bg="blue", width=1000, height=500)
 bid_items_frame.pack(side=RIGHT, expand=1)
