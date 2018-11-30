@@ -2,16 +2,29 @@ from random import randint
 import json
 import ast
 import socket
+import ast
 
+#UPDATE_STATE = 'UPDATE-STATE'
 REGISTER = 'REGISTER'
 REGISTERED = 'REGISTERED'
+DE_REGISTER = 'DE-REGISTER'
 REQUEST_NUMBER = 1
-GUI_MSG_NUMBER = 1
+GUI_MSG_NUMBER = 1  # GUI is receiver here
+# CLIENT_MSG_NUMBER = 1
 current_item = 0
 tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
+
+
+def msg_to_queue(udp_queue, queue_lock, msg):
+    """
+         This function takes a msg and a queue and binarizes it then adds to the queue
+    """
+    msg = dict_to_bytes(msg)
+    with queue_lock:
+        udp_queue.append(msg)
 
 
 def req_number():
@@ -34,7 +47,7 @@ def get_registration(my_tcp_port):
         'type': REGISTER,
         'name': name,
         'ip': ip_address,
-        'port': my_tcp_port
+        'port': my_tcp_port  #todo should be using port from user import here?
     }
     return send_msg
 
@@ -46,7 +59,7 @@ def get_unregistration():
     ip = '192.168.0.107'
     send_msg = {
         'request': req_number(),
-        'type': 'DE-REGISTER',
+        'type': DE_REGISTER,
         'name': name,
         'ip': ip
     }
@@ -80,17 +93,18 @@ def dict_to_bytes(dict_):
     return bytes_
 
 
-def update_txt(items):
+def update_txt(msg_type, items):
     """
     This function updates the text file that passes msg's to the gui. Mainly the state of items for bid
     :param items:
     :return:
     """
     global GUI_MSG_NUMBER
-    gui_tup = (GUI_MSG_NUMBER, items)
+    gui_tup = (GUI_MSG_NUMBER, msg_type, items)
     GUI_MSG_NUMBER += 1
     with open('toGui.txt', 'a') as f:
         f.write(str(gui_tup))
+        f.write("\n")
 
 
 def show_all_messages():
@@ -98,7 +112,7 @@ def show_all_messages():
     return send_msg
 
 
-def get_port():
+def get_port():  # bid_item=None here but pass it from what we get from gui
     bid_item = input("Enter the Item Number that you wish to bid on: ")
     global current_item
     current_item = bid_item 
@@ -121,14 +135,17 @@ def sendTCPMessage(msg):
     tcp_socket.send(msg)
 
 
-def get_bid(Host, bidport):
+def get_bid(Host, bidport, bid_param=None):
     port = bidport  # connect to this port for bid over TCP
     print(port)
     global current_item
-    
+
+
     establishTcpConnection(Host, bidport)
-    
-    bid = input("Enter the bid amount: ")
+    if bid_param =None:
+        bid = input("Enter the bid amount: ")
+    else:
+        bid = bid_param
     send_msg = {
         'type': 'BID',
         'request': req_number(),

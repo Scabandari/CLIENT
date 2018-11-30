@@ -2,7 +2,7 @@ import socket
 import ast
 from utils import (get_registration, get_unregistration, dict_to_bytes, get_offer,
                    update_txt, show_all_messages, get_port, get_bid, sendTCPMessage,
-                   tcp_socket)
+                   tcp_socket, req_number, msg_to_queue)
 import threading
 from time import sleep
 
@@ -12,6 +12,10 @@ from time import sleep
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
 
+BID = 'BID'
+CLIENT_MSG_NUMBER = 0  # next number of incoming msg from gui to client
+RETURN_MSG = 'RETURN-MSG'
+UPDATE_STATE = 'UPDATE-STATE'
 UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 ITEMPORT = 'ITEMPORT' 
 current_port = 0
@@ -27,9 +31,14 @@ general_lock = threading.Lock()
 tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
-HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
+#HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
+
+HOST = "192.168.0.106"
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER = ("192.168.1.184", 5024)
+SERVER_IP = "192.168.0.106"
+
+SERVER_UDP_PORT = 5024
+SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 udp_socket.bind((HOST, UDP_PORT))
@@ -47,6 +56,8 @@ MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're l
 # tcp_socket.bind((HOST, TCP_CLIENT_PORT))
 #tcp_socket.connect((tcp_ip, tcp_server_port))
 
+
+# we need to check the
 
 def tcp_incoming():
     while True:
@@ -96,8 +107,42 @@ def tcp_outgoing():
 #             with terminal_lock:
 #                 print("Received back tcp response: " + return_msg)
 
+# todo WHY DOES THIS WORK IN get_user_command OPTION C BUT NOT IN IT'S OWN THREAD?
+def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
+    # global CLIENT_MSG_NUMBER
+    # global udp_msg_lock
+    # global udp_messages
+    """ Read the next last line of text from toClient.txt and if """
+    # todo read the next line in toClient.txt and put the msg in the correct queue
+    while True:
+        with open('toClient.txt', 'r') as f:
+            for line in f:  # line ===> (number, state_dict)
+                try:
+                    line = ast.literal_eval(line)
+                    if int(line[0]) >= CLIENT_MSG_NUMBER_:
+                        print("reading toClient.txt")
+                        CLIENT_MSG_NUMBER_ += 1
+                        msg_for_server = line[2]
+                        msg_for_server['request'] = req_number()
+                        send_bytes = dict_to_bytes(line[2])
+                        if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
+                            with tcp_msg_lock:
+                                tcp_messages.append(send_bytes)
+                        else:  # else if not a bid we send over UDP
+                            with udp_msg_lock_:
+                                udp_messages_.append(send_bytes)
+                        # try:
+                        #     send_bytes = dict_to_bytes(line[2])
+                        #     with udp_msg_lock:
+                        #         udp_messages.append(send_bytes)
+                        # except UnboundLocalError:
+                        #     pass
+                        # msg_to_queue(udp_messages, udp_msg_lock, line[2])
+                except SyntaxError:
+                    print("Could not read line in toClient.txt")
+                    pass
 
-# todo test this
+
 def udp_incoming():
     # there are times when the UDP server will send all connected clients a msg such as NEW-ITEM msg's
     while True:
@@ -105,13 +150,14 @@ def udp_incoming():
         message = message.decode('utf-8')
         msg_dict = ast.literal_eval(message)
         if msg_dict['type'] == UPDATE_CLIENTS:
-            update_txt(msg_dict['items'])
+            update_txt(UPDATE_STATE, msg_dict['items'])
             continue
         elif msg_dict['type'] == ITEMPORT:
             global current_port
             current_port = msg_dict['port']
             print(current_port)
         print("Received udp message: " + message)
+        update_txt(RETURN_MSG, message)
 
 
 def udp_outgoing():
@@ -124,6 +170,9 @@ def udp_outgoing():
             # response = response.decode('utf-8')
             # print("Receive back udp response: " + response)
 
+
+gui_msg_reader = threading.Thread(target=gui_msg, args=(udp_messages, udp_msg_lock, CLIENT_MSG_NUMBER))
+gui_msg_reader.start()
 
 udp_incoming_thread = threading.Thread(target=udp_incoming)
 udp_incoming_thread.start()
@@ -223,9 +272,23 @@ def get_user_command():  # should be set on start up, include when sending TCP m
         return None
 
 
-while True:
-    get_user_command()
+#########################################################################################
+## FOR NOW YOU GUYS ARE USING THIS
+#while True:
+    #get_user_command()
+##########################################################################################
 
 
+########################################################################################
+## ONCE GUI IS FINISHED WE USE THIS
+udp_incoming_thread.join()
 
+udp_outgoing_thread.join()
+
+#tcp_incoming_thread.join()
+
+tcp_outgoing_thread.join()
+
+gui_msg_reader.join()
+########################################################################################
 
