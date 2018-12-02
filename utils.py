@@ -133,7 +133,6 @@ def establishTcpConnection(HOST, portNumber):
 def sendTCPMessage(msg):
     tcp_socket.send(msg)
 
-
 def get_bid(Host, bidport, bid_param, name, itemNum):
     establishTcpConnection(Host, bidport)
     bid = bid_param

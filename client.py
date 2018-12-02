@@ -26,6 +26,7 @@ current_item = 0
 resend_register = True
 latest_registration = {}
 latest_registration_lock = threading.Lock()
+port_lock = threading.Lock()
 
 udp_messages = []
 udp_msg_lock = threading.Lock()
@@ -40,11 +41,11 @@ terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 #HOST = "172.31.121.120"
 #HOST = '192.168.0.106'
-HOST = '172.31.12.213'
+HOST = '172.31.19.215'
 UDP_PORT = 5075  # Clients UDP port they are listening on
 #SERVER_IP = "172.31.121.120"
 #SERVER_IP = '192.168.0.106'
-SERVER_IP = '172.31.12.213'
+SERVER_IP = '172.31.19.215'
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -122,7 +123,11 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
     # global udp_messages
     global latest_registration
     global latest_registration_lock
+    global port_lock
     #global resend_register
+    path = 'C:\\Users\\Adamd\\OneDrive\\School\\COEN445\\project\\server\\SERVER\\state.txt'
+    item_list = open(path, 'r')
+    cport = 0
     global REGISTER
     """ Read the next last line of text from toClient.txt and if """
     # todo read the next line in toClient.txt and put the msg in the correct queue
@@ -144,16 +149,16 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                             item = line[2]['item #']
                             amount = line[2]['amount']
                             name = line[2]['name']
-                            send_msg = get_port(item)
-                            try:
-                                send_bytes = dict_to_bytes(send_msg)
-                                with udp_msg_lock:
-                                    udp_messages.append(send_bytes)
-                            except UnboundLocalError:
-                                pass
-                            sleep(0.8)
-                            if current_port != 0:
-                                send_msg = get_bid(HOST, current_port, amount, name)
+                            item_read = item_list.read()
+                            item_dict = ast.literal_eval(item_read)
+                            items = item_dict['items']
+                            print(items)
+                            for element in range (0, len(items)):
+                                if int(items[element]['item #']) == int(item):
+                                    print('got here')
+                                    cport = items[element]['port #']
+
+                                send_msg = get_bid(HOST, cport, amount, name, item)
 
                                 global start_receiving_tcp_messages
                                 start_receiving_tcp_messages = True
@@ -163,15 +168,6 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                                         tcp_messages.append(send_bytes)
                                 except UnboundLocalError:
                                     pass
-                            send_msg = show_all_messages()
-                            try:
-                                send_bytes = dict_to_bytes(send_msg)
-                                with udp_msg_lock:
-                                    udp_messages.append(send_bytes)
-                            except UnboundLocalError:
-                                pass
-                            else:
-                                print("This item does not exit")
 
                         else:  # else if not a bid we send over UDP
                             with udp_msg_lock_:

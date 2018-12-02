@@ -1,3 +1,0 @@
-(0, 'REGISTER', {'port': '5555', 'type': 'REGISTER', 'request': 0, 'ip': '172.31.12.213', 'name': 'rr'})
-(1, 'OFFER', {'type': 'OFFER', 'request': 0, 'name': 'rr', 'minimum bid': '10', 'ip': '172.31.12.213', 'description': 'bat'})
-(2, 'OFFER', {'type': 'OFFER', 'request': 0, 'name': 'rr', 'minimum bid': '5', 'ip': '172.31.12.213', 'description': 'shoes'})
