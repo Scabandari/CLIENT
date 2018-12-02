@@ -134,14 +134,13 @@ def sendTCPMessage(msg):
     tcp_socket.send(msg)
 
 
-def get_bid(Host, bidport, bid_param, name):
-    global current_item
+def get_bid(Host, bidport, bid_param, name, itemNum):
     establishTcpConnection(Host, bidport)
     bid = bid_param
     send_msg = {
         'type': 'BID',
         'request': req_number(),
-        'item': current_item,
+        'item': itemNum,
         'amount': bid,
         'name': name
     }
