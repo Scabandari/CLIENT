@@ -38,6 +38,10 @@ BID_OVER = 'BID-OVER'
 SOLD_TO = 'SOLD-TO'
 NOT_SOLD = 'NOT-SOLD'
 
+SERVER_CRASHED = 'SERVER-CRASHED'
+
+
+
 # offer_msgs = [OFFER_CONF, OFFER_DENIED]
 # registration_msgs = [REGISTERED, UNREGISTERED, DEREG_DENIED, DEREG_CONF]
 # bidding_msgs = [HIGHEST, WIN, BID_OVER, SOLD_TO, NOT_SOLD]
@@ -178,7 +182,7 @@ def msg_for_client(msg_type):
 
 def update_txt(msg_type, msg):
     """
-    This function updates the text file that passes msg's to the gui. Mainly the state of items for bid
+    This function updates the text file that passes msg's to the CLIENT. Mainly the state of items for bid
     :param items:
     :return:
     """
@@ -202,15 +206,16 @@ def update_return_msg(msg_):
         return_msg_bidding.set(msg_)
 
 
-def update_bids():
+def update_bids(server_crashed_msg=None):
     global state
-    msg = ""
+    msg = "" if server_crashed_msg is None else server_crashed_msg
     for item in state:
         msg += "Item #: " + str(item['item #']) + "\n"
         msg += "Seller: " + item['seller'] + "\n"
         msg += "Description: " + item['description'] + "\n"
-        msg += "highest bid: " + str(item['highest bid'][0]) + ": " + str(item['highest bid'][1]) + "\n"
-        msg += "minimum bid: " + str(item['minimum bid']) + "\n\n\n"
+        msg += "Highest bid: " + str(item['highest bid'][0]) + ": " + str(item['highest bid'][1]) + "\n"
+        msg += "Minimum bid: " + str(item['minimum bid']) + "\n"
+        msg += "Open status: " + str(item['open status']) + "\n\n\n"
     msg_box_str.set(msg)
 
 
@@ -233,6 +238,8 @@ def read_state():
                         # msg_box_txt.set(line[1])
                     elif line[1] == RETURN_MSG:
                         update_return_msg(line[2])
+                    elif line[1] == SERVER_CRASHED:
+                        update_bids(line[2])
     except SyntaxError:
         pass
 

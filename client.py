@@ -11,7 +11,9 @@ from time import sleep
     for TCP. We now have a 3rd thread checking for incoming UDP messages. When user decides from main 
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
-
+SERVER_CRASHED = 'SERVER-CRASHED'
+REGISTER = 'REGISTER'
+UNREGISTERED = 'UNREGISTERED'
 BID = 'BID'
 CLIENT_MSG_NUMBER = 0  # next number of incoming msg from gui to client
 RETURN_MSG = 'RETURN-MSG'
@@ -20,6 +22,10 @@ UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 ITEMPORT = 'ITEMPORT' 
 current_port = 0
 current_item = 0
+
+resend_register = True
+latest_registration = {}
+latest_registration_lock = threading.Lock()
 
 udp_messages = []
 udp_msg_lock = threading.Lock()
@@ -32,9 +38,13 @@ tcp_messages_returned = []  # tcp msg's returned from server, todo need this?
 tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
-HOST = "172.31.121.120"
+#HOST = "172.31.121.120"
+#HOST = '192.168.0.106'
+HOST = '172.31.12.213'
 UDP_PORT = 5075  # Clients UDP port they are listening on
-SERVER_IP = "172.31.121.120"
+#SERVER_IP = "172.31.121.120"
+#SERVER_IP = '192.168.0.106'
+SERVER_IP = '172.31.12.213'
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -105,11 +115,15 @@ def tcp_outgoing():
 #             with terminal_lock:
 #                 print("Received back tcp response: " + return_msg)
 
-# todo WHY DOES THIS WORK IN get_user_command OPTION C BUT NOT IN IT'S OWN THREAD?
+
 def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
     # global CLIENT_MSG_NUMBER
     # global udp_msg_lock
     # global udp_messages
+    global latest_registration
+    global latest_registration_lock
+    #global resend_register
+    global REGISTER
     """ Read the next last line of text from toClient.txt and if """
     # todo read the next line in toClient.txt and put the msg in the correct queue
     while True:
@@ -121,6 +135,9 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                         print("reading toClient.txt")
                         CLIENT_MSG_NUMBER_ += 1
                         msg_for_server = line[2]
+                        if line[1] == REGISTER:
+                            with latest_registration_lock:
+                                latest_registration = line[2]
                         msg_for_server['request'] = req_number()
                         send_bytes = dict_to_bytes(line[2])
                         if line[1] == BID:  # BID is the only kind of msg to be sent over TCP? I think so
@@ -172,18 +189,34 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
 
 
 def udp_incoming():
+    global latest_registration_lock
+    global latest_registration
+    global resend_register
     # there are times when the UDP server will send all connected clients a msg such as NEW-ITEM msg's
     while True:
         message, addr = udp_socket.recvfrom(1024)
         message = message.decode('utf-8')
         msg_dict = ast.literal_eval(message)
+        if msg_dict['type'] == UNREGISTERED and resend_register is True:
+            with latest_registration_lock:
+                reg = latest_registration
+            resend_register = False
+            send_bytes = dict_to_bytes(reg)
+            with udp_msg_lock:
+                udp_messages.append(send_bytes)
+        elif msg_dict['type'] == UNREGISTERED and resend_register is False:
+            resend_register = True
+
         if msg_dict['type'] == UPDATE_CLIENTS:
             update_txt(UPDATE_STATE, msg_dict['items'])
             continue
-        elif msg_dict['type'] == ITEMPORT:
-            global current_port
-            current_port = msg_dict['port']
-            print(current_port)
+        elif msg_dict['type'] == SERVER_CRASHED:
+            update_txt(SERVER_CRASHED, msg_dict['description'])
+            continue
+        # elif msg_dict['type'] == ITEMPORT:  #
+        #     global current_port
+        #     current_port = msg_dict['port']
+        #     print(current_port)
         print("Received udp message: " + message)
         update_txt(RETURN_MSG, message)
 
@@ -324,3 +357,4 @@ tcp_outgoing_thread.join()
 
 gui_msg_reader.join()
 ########################################################################################
+"""
