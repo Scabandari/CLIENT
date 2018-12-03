@@ -2,7 +2,7 @@ import socket
 import ast
 from utils import (get_registration, get_unregistration, dict_to_bytes, get_offer,
                    update_txt, show_all_messages, get_port, get_bid, sendTCPMessage,
-                   tcp_socket, req_number, msg_to_queue)
+                   tcp_socket, req_number, msg_to_queue, get_client_msg_num, attempt_recovery)
 import threading
 from time import sleep
 
@@ -11,11 +11,13 @@ from time import sleep
     for TCP. We now have a 3rd thread checking for incoming UDP messages. When user decides from main 
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
+attempt_recovery()  # just for keeping track of the next number in toGui.txt
 SERVER_CRASHED = 'SERVER-CRASHED'
 REGISTER = 'REGISTER'
 UNREGISTERED = 'UNREGISTERED'
 BID = 'BID'
-CLIENT_MSG_NUMBER = 0  # next number of incoming msg from gui to client
+CLIENT_MSG_NUMBER = get_client_msg_num('toClient.txt')  # next number of incoming msg from gui to client
+GUI_MSG_NUMBER = get_client_msg_num('toGui.txt')  # 1  # GUI is receiver here
 RETURN_MSG = 'RETURN-MSG'
 UPDATE_STATE = 'UPDATE-STATE'
 UPDATE_CLIENTS = 'UPDATE-CLIENTS'
@@ -39,12 +41,12 @@ tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 #HOST = "172.31.121.120"
-#HOST = '192.168.0.106'
-HOST = '172.31.12.213'
+HOST = '192.168.0.106'
+#HOST = '172.31.12.213'
 UDP_PORT = 5075  # Clients UDP port they are listening on
 #SERVER_IP = "172.31.121.120"
-#SERVER_IP = '192.168.0.106'
-SERVER_IP = '172.31.12.213'
+SERVER_IP = '192.168.0.106'
+#SERVER_IP = '172.31.12.213'
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -192,6 +194,7 @@ def udp_incoming():
     global latest_registration_lock
     global latest_registration
     global resend_register
+    global GUI_MSG_NUMBER
     # there are times when the UDP server will send all connected clients a msg such as NEW-ITEM msg's
     while True:
         message, addr = udp_socket.recvfrom(1024)
@@ -208,17 +211,17 @@ def udp_incoming():
             resend_register = True
 
         if msg_dict['type'] == UPDATE_CLIENTS:
-            update_txt(UPDATE_STATE, msg_dict['items'])
+            update_txt(UPDATE_STATE, msg_dict['items'])  # , GUI_MSG_NUMBER)
             continue
         elif msg_dict['type'] == SERVER_CRASHED:
-            update_txt(SERVER_CRASHED, msg_dict['description'])
+            update_txt(SERVER_CRASHED, msg_dict['description'])  # , GUI_MSG_NUMBER)
             continue
         # elif msg_dict['type'] == ITEMPORT:  #
         #     global current_port
         #     current_port = msg_dict['port']
         #     print(current_port)
         print("Received udp message: " + message)
-        update_txt(RETURN_MSG, message)
+        update_txt(RETURN_MSG, message)  # , GUI_MSG_NUMBER)
 
 
 def udp_outgoing():

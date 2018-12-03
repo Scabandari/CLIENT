@@ -1,12 +1,14 @@
 from tkinter import *
 import ast
+from utils import get_client_msg_num
 
 # todo https://stackoverflow.com/questions/34276663/tkinter-gui-layout-using-frames-and-grid#34277295
 
 state = None
-next_command = 0
+next_command = get_client_msg_num('toClient.txt')
 
-CLIENT_MSG_NUMBER = 0
+CLIENT_MSG_NUMBER = get_client_msg_num('toClient.txt')
+
 # types of incoming msg's from client
 UPDATE_STATE = 'UPDATE-STATE'
 RETURN_MSG = 'RETURN-MSG'
