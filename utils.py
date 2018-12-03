@@ -172,7 +172,7 @@ def get_bid(Host, bidport, bid_param, name, current_item):
     send_msg = {
         'type': 'BID',
         'request': req_number(),
-        'item': itemNum,
+        'item': current_item,  #itemNum,
         'amount': bid,
         'name': name,
         'port #': bidport

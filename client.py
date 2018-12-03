@@ -2,7 +2,7 @@ import socket
 import ast
 from utils import (get_registration, get_unregistration, dict_to_bytes, get_offer,
                    update_txt, show_all_messages, get_port, get_bid, sendTCPMessage,
-                   tcp_socket, get_client_msg_num, attempt_recovery,
+                   get_client_msg_num, attempt_recovery,  #  tcp_socket,
                    list_of_connections, req_number, msg_to_queue, establishTcpConnection)
 import threading
 from time import sleep
@@ -12,6 +12,8 @@ from time import sleep
     for TCP. We now have a 3rd thread checking for incoming UDP messages. When user decides from main 
     thread to answer at terminal they want to register they'll give some info and we create a msg 
     and put into the list the UDP thread keeps checking."""
+items = []
+items_lock = threading.Lock()
 attempt_recovery()  # just for keeping track of the next number in toGui.txt
 SERVER_CRASHED = 'SERVER-CRASHED'
 REGISTER = 'REGISTER'
@@ -44,12 +46,12 @@ tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 #HOST = "172.31.121.120"
-#HOST = '192.168.0.106'
-HOST = '172.31.12.213'
+HOST = '192.168.0.106'
+#HOST = '172.31.12.213'
 UDP_PORT = 5075  # Clients UDP port they are listening on
 #SERVER_IP = "172.31.121.120"
-#SERVER_IP = '192.168.0.106'
-SERVER_IP = '172.31.12.213'
+SERVER_IP = '192.168.0.106'
+#SERVER_IP = '172.31.12.213'
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -86,7 +88,6 @@ def tcp_incoming():
                     print(msg_dict)
                 else:
                     pass
-
 
 
 def tcp_outgoing():
@@ -129,8 +130,10 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
     global latest_registration
     global latest_registration_lock
     global port_lock
+    global items
+    global current_port
     #global resend_register
-    path = 'C:\\Users\\Adamd\\OneDrive\\School\\COEN445\\project\\server\\SERVER\\state.txt'
+    path = '/home/ryan/PycharmProjects/SERVER/state.txt'
     item_list = open(path, 'r')
     cport = 0
     global REGISTER
@@ -165,15 +168,18 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                                 with udp_msg_lock:
                                     udp_messages.append(send_bytes)
                                 '''
+                                for it in items:
+                                    if int(it['item #']) == int(item):
+                                        current_port = it['port #']
                                 sleep(1.0)
-                                with open('C:\\Users\\a.shakra\\Desktop\\COEN445Project\\SERVER\\state.txt', 'r') as file:
-                                    state_ = file.read()
-                                    state_ = ast.literal_eval(state_)
-                                    items = state_['items']
-                                    for obj in items:
-                                        if int(obj['item #']) == int(item):
-                                            global current_port
-                                            current_port = obj['port #']
+                                # with open('/home/ryan/PycharmProjects/SERVER/state.txt', 'r') as file:
+                                #     state_ = file.read()
+                                #     state_ = ast.literal_eval(state_)
+                                #     items = state_['items']
+                                #     for obj in items:
+                                #         if int(obj['item #']) == int(item):
+                                #             global current_port
+                                #             current_port = obj['port #']
 
                                 establishTcpConnection(HOST, current_port)
                             sleep(0.8)
@@ -211,6 +217,8 @@ def udp_incoming():
     global latest_registration_lock
     global latest_registration
     global resend_register
+    global items
+    global items_lock
     # there are times when the UDP server will send all connected clients a msg such as NEW-ITEM msg's
     while True:
         message, addr = udp_socket.recvfrom(1024)
@@ -228,6 +236,8 @@ def udp_incoming():
 
         if msg_dict['type'] == UPDATE_CLIENTS:
             update_txt(UPDATE_STATE, msg_dict['items'])
+            with items_lock:
+                items = msg_dict['items']
             continue
         elif msg_dict['type'] == SERVER_CRASHED:
             update_txt(SERVER_CRASHED, msg_dict['description'])
