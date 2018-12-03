@@ -12,6 +12,10 @@ CLIENT_MSG_NUMBER = get_client_msg_num('toClient.txt')
 # types of incoming msg's from client
 UPDATE_STATE = 'UPDATE-STATE'
 RETURN_MSG = 'RETURN-MSG'
+UPDATE_HIGH = 'UPDATE_HIGH'
+UPDATE_OVER = 'UPDATE_OVER'
+UPDATE_SOLDTO = 'UPDATE_SOLDTO'
+UPDATE_NOTSOLD = 'UPDATE_NOTSOLD'
 
 # Types of msg's to be sent to server
 REGISTER = 'REGISTER'
@@ -61,7 +65,7 @@ offer_received = [OFFER_CONF,  # types of return msg's to display in msg box for
                   OFFER_DENIED]
 
 
-bid_received = [HIGHEST, WIN, BID_OVER, SOLD_TO, NOT_SOLD]  # types of return msg's to display in msg box for Bidding
+bid_received = [HIGHEST, WIN, BID_OVER, SOLD_TO, NOT_SOLD, UPDATE_HIGH, UPDATE_NOTSOLD, UPDATE_OVER, UPDATE_SOLDTO]  # types of return msg's to display in msg box for Bidding
 
 
 def register_client(event):
