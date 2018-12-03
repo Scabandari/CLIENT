@@ -11,9 +11,7 @@ DE_REGISTER = 'DE-REGISTER'
 REQUEST_NUMBER = 1
 GUI_MSG_NUMBER = 1  # GUI is receiver here
 # CLIENT_MSG_NUMBER = 1
-current_item = 0
-tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
+list_of_connections = [()] # each () consists of socket, and port number for each tcp item
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
 
@@ -113,8 +111,8 @@ def show_all_messages():
 
 
 def get_port(item):  # bid_item=None here but pass it from what we get from gui
-    global current_item
-    current_item = item 
+    #global current_item
+    #current_item = item
     send_msg = {
         'type': 'GETPORT',
         'item': item 
@@ -123,27 +121,40 @@ def get_port(item):  # bid_item=None here but pass it from what we get from gui
 
 
 def establishTcpConnection(HOST, portNumber):
+    for a_socket in list_of_connections:
+        if a_socket:
+            if a_socket[1] == portNumber:  # there is already a socket for that item
+                return
+    tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print("Connecting to TCP connection for the item")
     tcp_socket.connect((HOST, portNumber))
     initial_data = tcp_socket.recv(1024)
     print(initial_data)
-
+    entry = (tcp_socket, portNumber)
+    list_of_connections.append(entry)
 
 
 def sendTCPMessage(msg):
-    tcp_socket.send(msg)
+    msg = msg.decode("utf-8")
+    dict_msg = ast.literal_eval(msg)
+    for a_socket in list_of_connections:
+        if a_socket:
+            if a_socket[1] == dict_msg['port #']:
+                send_bytes = dict_to_bytes(msg)
+                a_socket[0].send(send_bytes)
 
 
-def get_bid(Host, bidport, bid_param, name):
-    global current_item
-    establishTcpConnection(Host, bidport)
+def get_bid(Host, bidport, bid_param, name, current_item):
+    #global current_item
+    # establishTcpConnection(Host, bidport)
     bid = bid_param
     send_msg = {
         'type': 'BID',
         'request': req_number(),
         'item': current_item,
         'amount': bid,
-        'name': name
+        'name': name,
+        'port #': bidport
     }
     return send_msg
 
