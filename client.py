@@ -2,7 +2,8 @@ import socket
 import ast
 from utils import (get_registration, get_unregistration, dict_to_bytes, get_offer,
                    update_txt, show_all_messages, get_port, get_bid, sendTCPMessage,
-                   tcp_socket, req_number, msg_to_queue, get_client_msg_num, attempt_recovery)
+                   tcp_socket, get_client_msg_num, attempt_recovery,
+                   list_of_connections, req_number, msg_to_queue, establishTcpConnection)
 import threading
 from time import sleep
 
@@ -24,10 +25,12 @@ UPDATE_CLIENTS = 'UPDATE-CLIENTS'
 ITEMPORT = 'ITEMPORT' 
 current_port = 0
 current_item = 0
+port_has_changed = 0
 
 resend_register = True
 latest_registration = {}
 latest_registration_lock = threading.Lock()
+port_lock = threading.Lock()
 
 udp_messages = []
 udp_msg_lock = threading.Lock()
@@ -41,12 +44,12 @@ tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 #HOST = "172.31.121.120"
-HOST = '192.168.0.106'
-#HOST = '172.31.12.213'
+#HOST = '192.168.0.106'
+HOST = '172.31.12.213'
 UDP_PORT = 5075  # Clients UDP port they are listening on
 #SERVER_IP = "172.31.121.120"
-SERVER_IP = '192.168.0.106'
-#SERVER_IP = '172.31.12.213'
+#SERVER_IP = '192.168.0.106'
+SERVER_IP = '172.31.12.213'
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -72,18 +75,18 @@ MY_TCP_PORT = 5010  # For listening, the server needs to know which port we're l
 def tcp_incoming():
     while True:
         if start_receiving_tcp_messages: # this condition will be true after conn to item is made
-            with tcp_msg_lock:
-                # print('hello, im in tcp_incoming')
-                message, addr = tcp_socket.recvfrom(1024)
-                message = message.decode('utf-8')
-                msg_dict = ast.literal_eval(message)
-                print("message received over tcp: ")
-                print(msg_dict)
-                '''
-                try:
-                    if msg['set port']:
-                        current 
-                '''
+            #with tcp_msg_lock:
+            # print('hello, im in tcp_incoming')
+            for a_socket in list_of_connections:
+                if a_socket:
+                    message, addr = a_socket[0].recvfrom(1024)
+                    message = message.decode('utf-8')
+                    msg_dict = ast.literal_eval(message)
+                    print("message received over tcp: ")
+                    print(msg_dict)
+                else:
+                    pass
+
 
 
 def tcp_outgoing():
@@ -92,6 +95,7 @@ def tcp_outgoing():
             with tcp_msg_lock:
                 msg = tcp_messages.pop(0)
                 sendTCPMessage(msg)
+
 
 # def tcp_incoming():
 #     global MY_TCP_PORT
@@ -124,7 +128,11 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
     # global udp_messages
     global latest_registration
     global latest_registration_lock
+    global port_lock
     #global resend_register
+    path = 'C:\\Users\\Adamd\\OneDrive\\School\\COEN445\\project\\server\\SERVER\\state.txt'
+    item_list = open(path, 'r')
+    cport = 0
     global REGISTER
     """ Read the next last line of text from toClient.txt and if """
     # todo read the next line in toClient.txt and put the msg in the correct queue
@@ -146,34 +154,43 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                             item = line[2]['item #']
                             amount = line[2]['amount']
                             name = line[2]['name']
-                            send_msg = get_port(item)
-                            try:
+                            global current_item
+                            if item == current_item:  # meaning on new socket connection should be made
+                                pass
+                            else:
+                                current_item = item
+                                '''
+                                send_msg = get_port(item)
                                 send_bytes = dict_to_bytes(send_msg)
                                 with udp_msg_lock:
                                     udp_messages.append(send_bytes)
-                            except UnboundLocalError:
-                                pass
+                                '''
+                                sleep(1.0)
+                                with open('C:\\Users\\a.shakra\\Desktop\\COEN445Project\\SERVER\\state.txt', 'r') as file:
+                                    state_ = file.read()
+                                    state_ = ast.literal_eval(state_)
+                                    items = state_['items']
+                                    for obj in items:
+                                        if int(obj['item #']) == int(item):
+                                            global current_port
+                                            current_port = obj['port #']
+
+                                establishTcpConnection(HOST, current_port)
                             sleep(0.8)
                             if current_port != 0:
-                                send_msg = get_bid(HOST, current_port, amount, name)
+                                send_msg = get_bid(HOST, current_port, amount, name, item)
 
                                 global start_receiving_tcp_messages
                                 start_receiving_tcp_messages = True
-                                try:
-                                    send_bytes = dict_to_bytes(send_msg)
-                                    with tcp_msg_lock:
-                                        tcp_messages.append(send_bytes)
-                                except UnboundLocalError:
-                                    pass
-                            send_msg = show_all_messages()
-                            try:
+
                                 send_bytes = dict_to_bytes(send_msg)
-                                with udp_msg_lock:
-                                    udp_messages.append(send_bytes)
-                            except UnboundLocalError:
-                                pass
-                            else:
-                                print("This item does not exit")
+                                tcp_messages.append(send_bytes)
+
+                            send_msg = show_all_messages()
+
+                            send_bytes = dict_to_bytes(send_msg)
+                            with udp_msg_lock:
+                                udp_messages.append(send_bytes)
 
                         else:  # else if not a bid we send over UDP
                             with udp_msg_lock_:
@@ -194,7 +211,6 @@ def udp_incoming():
     global latest_registration_lock
     global latest_registration
     global resend_register
-    global GUI_MSG_NUMBER
     # there are times when the UDP server will send all connected clients a msg such as NEW-ITEM msg's
     while True:
         message, addr = udp_socket.recvfrom(1024)
@@ -211,17 +227,17 @@ def udp_incoming():
             resend_register = True
 
         if msg_dict['type'] == UPDATE_CLIENTS:
-            update_txt(UPDATE_STATE, msg_dict['items'])  # , GUI_MSG_NUMBER)
+            update_txt(UPDATE_STATE, msg_dict['items'])
             continue
         elif msg_dict['type'] == SERVER_CRASHED:
-            update_txt(SERVER_CRASHED, msg_dict['description'])  # , GUI_MSG_NUMBER)
+            update_txt(SERVER_CRASHED, msg_dict['description'])
             continue
         # elif msg_dict['type'] == ITEMPORT:  #
         #     global current_port
         #     current_port = msg_dict['port']
         #     print(current_port)
         print("Received udp message: " + message)
-        update_txt(RETURN_MSG, message)  # , GUI_MSG_NUMBER)
+        update_txt(RETURN_MSG, message)
 
 
 def udp_outgoing():
@@ -346,7 +362,7 @@ def get_user_command():  # should be set on start up, include when sending TCP m
 #while True:
  #   get_user_command()
 ##########################################################################################
-
+"""
 
 ########################################################################################
 ## ONCE GUI IS FINISHED WE USE THIS
@@ -360,4 +376,3 @@ tcp_outgoing_thread.join()
 
 gui_msg_reader.join()
 ########################################################################################
-"""
