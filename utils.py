@@ -2,6 +2,7 @@ from random import randint
 import json
 import ast
 import socket
+import os
 import ast
 
 #UPDATE_STATE = 'UPDATE-STATE'
@@ -9,11 +10,29 @@ REGISTER = 'REGISTER'
 REGISTERED = 'REGISTERED'
 DE_REGISTER = 'DE-REGISTER'
 REQUEST_NUMBER = 1
-GUI_MSG_NUMBER = 1  # GUI is receiver here
+GUI_MSG_NUMBER = 1  # GUI is receiver here, todo should be 0 ?
 # CLIENT_MSG_NUMBER = 1
 list_of_connections = [()] # each () consists of socket, and port number for each tcp item
 # https://www.digitalocean.com/community/tutorials/how-to-handle-plain-text-files-in-python-3
 # https://www.tutorialspoint.com/python3/python_files_io.htm
+
+
+def get_client_msg_num(file_name):
+    lines = []
+    msg_num = 1
+    if os.path.getsize(file_name) > 0:
+        with open(file_name, 'r') as f:
+            for line in f:
+                lines.append(line)
+    if len(lines) > 0:
+        last_line = ast.literal_eval(lines[-1])
+        msg_num = int(last_line[0]) + 1
+    return msg_num
+
+
+def attempt_recovery():
+    global GUI_MSG_NUMBER
+    GUI_MSG_NUMBER = get_client_msg_num('toGui.txt')
 
 
 def msg_to_queue(udp_queue, queue_lock, msg):
@@ -91,7 +110,7 @@ def dict_to_bytes(dict_):
     return bytes_
 
 
-def update_txt(msg_type, items):
+def update_txt(msg_type, items, gui_msg_number=None):
     """
     This function updates the text file that passes msg's to the gui. Mainly the state of items for bid
     :param items:
@@ -99,7 +118,9 @@ def update_txt(msg_type, items):
     """
     global GUI_MSG_NUMBER
     gui_tup = (GUI_MSG_NUMBER, msg_type, items)
+    #gui_tup = (gui_msg_number, msg_type, items)
     GUI_MSG_NUMBER += 1
+    #gui_msg_number += 1
     with open('toGui.txt', 'a') as f:
         f.write(str(gui_tup))
         f.write("\n")
@@ -151,7 +172,7 @@ def get_bid(Host, bidport, bid_param, name, current_item):
     send_msg = {
         'type': 'BID',
         'request': req_number(),
-        'item': itemNum,
+        'item': current_item,  #itemNum,
         'amount': bid,
         'name': name,
         'port #': bidport
