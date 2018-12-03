@@ -34,6 +34,8 @@ latest_registration = {}
 latest_registration_lock = threading.Lock()
 port_lock = threading.Lock()
 
+received_tcp_messages = []
+received_tcp_messages_lock = threading.Lock()
 udp_messages = []
 udp_msg_lock = threading.Lock()
 tcp_messages = []
@@ -46,11 +48,11 @@ tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 #HOST = "172.31.121.120"
-HOST = '192.168.0.106'
+HOST = '172.31.5.102'
 #HOST = '172.31.12.213'
 UDP_PORT = 5075  # Clients UDP port they are listening on
 #SERVER_IP = "172.31.121.120"
-SERVER_IP = '192.168.0.106'
+SERVER_IP = '172.31.5.102'
 #SERVER_IP = '172.31.12.213'
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
@@ -81,13 +83,24 @@ def tcp_incoming():
             # print('hello, im in tcp_incoming')
             for a_socket in list_of_connections:
                 if a_socket:
-                    message, addr = a_socket[0].recvfrom(1024)
-                    message = message.decode('utf-8')
-                    msg_dict = ast.literal_eval(message)
-                    print("message received over tcp: ")
-                    print(msg_dict)
+                    with received_tcp_messages_lock:
+                        a_socket[0].setblocking(0)  # might need to put this when socket is first initialized
+                        # ready = select.select([a_socket], [], [], timeout_in_seconds)
+                        try:
+                            message, addr = a_socket[0].recvfrom(1024)
+                        except BlockingIOError:
+                            continue
+                        message = message.decode('utf-8')
+                        msg_dict = ast.literal_eval(message)
+                        received_tcp_messages.append(msg_dict)
+                    #print("message received over tcp: ")
+                    #print(received_tcp_messages.pop(0))
                 else:
                     pass
+            if received_tcp_messages:
+                for message in received_tcp_messages:
+                    print("message received over tcp: ")
+                    print(received_tcp_messages.pop(0))
 
 
 def tcp_outgoing():
@@ -132,10 +145,10 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
     global port_lock
     global items
     global current_port
-    #global resend_register
-    path = '/home/ryan/PycharmProjects/SERVER/state.txt'
-    item_list = open(path, 'r')
-    cport = 0
+    # global resend_register
+    # path = '/home/ryan/PycharmProjects/SERVER/state.txt'
+    # item_list = open(path, 'r')
+    # cport = 0
     global REGISTER
     """ Read the next last line of text from toClient.txt and if """
     # todo read the next line in toClient.txt and put the msg in the correct queue
