@@ -209,7 +209,7 @@ def gui_msg(udp_messages_, udp_msg_lock_, CLIENT_MSG_NUMBER_):
                                 #             global current_port
                                 #             current_port = obj['port #']
 
-                                establishTcpConnection(HOST, current_port)
+                                establishTcpConnection(SERVER_IP, current_port)
                             sleep(0.8)
                             if current_port != 0:
                                 send_msg = get_bid(HOST, current_port, amount, name, item)
