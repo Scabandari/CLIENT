@@ -24,6 +24,11 @@ GUI_MSG_NUMBER = get_client_msg_num('toGui.txt')  # 1  # GUI is receiver here
 RETURN_MSG = 'RETURN-MSG'
 UPDATE_STATE = 'UPDATE-STATE'
 UPDATE_CLIENTS = 'UPDATE-CLIENTS'
+UPDATE_STATE = 'UPDATE-STATE'
+UPDATE_HIGH = 'UPDATE_HIGH'
+UPDATE_OVER = 'UPDATE_OVER'
+UPDATE_SOLDTO = 'UPDATE_SOLDTO'
+UPDATE_NOTSOLD = 'UPDATE_NOTSOLD'
 ITEMPORT = 'ITEMPORT' 
 current_port = 0
 current_item = 0
@@ -48,11 +53,11 @@ tcp_ret_lock = threading.Lock()
 terminal_lock = threading.Lock()
 #HOST = "192.168.1.184"  # this would normally be different and particular to the host machine ie client
 #HOST = "172.31.121.120"
-HOST = '172.31.5.102'
+HOST = '172.31.19.215'
 #HOST = '172.31.12.213'
 UDP_PORT = 5075  # Clients UDP port they are listening on
 #SERVER_IP = "172.31.121.120"
-SERVER_IP = '172.31.5.102'
+SERVER_IP = '172.31.19.215'
 #SERVER_IP = '172.31.12.213'
 SERVER_UDP_PORT = 5024
 SERVER = (SERVER_IP, SERVER_UDP_PORT)
@@ -87,7 +92,7 @@ def tcp_incoming():
                         a_socket[0].setblocking(0)  # might need to put this when socket is first initialized
                         # ready = select.select([a_socket], [], [], timeout_in_seconds)
                         try:
-                            message, addr = a_socket[0].recvfrom(1024)
+                            message, addr = a_socket[0].recvfrom(4096)
                         except BlockingIOError:
                             continue
                         message = message.decode('utf-8')
@@ -100,7 +105,17 @@ def tcp_incoming():
             if received_tcp_messages:
                 for message in received_tcp_messages:
                     print("message received over tcp: ")
-                    print(received_tcp_messages.pop(0))
+                    msg_dict_ = (received_tcp_messages.pop(0))
+                    print(msg_dict_)
+                    if type(msg_dict_).__name__ == 'dict':
+                        if msg_dict_['type'] == 'HIGHEST':
+                            update_txt(RETURN_MSG, str(msg_dict_))
+                        elif msg_dict_['type'] == 'BID_OVER':
+                            update_txt(RETURN_MSG, str(msg_dict_))  
+                        elif msg_dict_['type'] == 'BID_SOLDTO':
+                            update_txt(RETURN_MSG, str(msg_dict_))
+                        elif msg_dict_['type'] == 'BID_NOTSOLD':
+                            update_txt(RETURN_MSG, str(msg_dict_))
 
 
 def tcp_outgoing():
@@ -234,7 +249,7 @@ def udp_incoming():
     global items_lock
     # there are times when the UDP server will send all connected clients a msg such as NEW-ITEM msg's
     while True:
-        message, addr = udp_socket.recvfrom(1024)
+        message, addr = udp_socket.recvfrom(4096)
         message = message.decode('utf-8')
         msg_dict = ast.literal_eval(message)
         if msg_dict['type'] == UNREGISTERED and resend_register is True:
